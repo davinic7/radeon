@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RIDEON FOTO DEPORTIVA</title>
+  <link rel="stylesheet" href="css/tailwind.css">
+  <link rel="shortcut icon" href="/img logos/Logo_Negro.png" type="image/x-icon">
+</head>
+<body data-page="index" class="min-h-screen bg-slate-950 font-brand text-white">
+
+  <!-- Slot vacio: components/layout.js inyecta aca el header/nav completo. -->
+  <header id="site-header"></header>
+
+  <!-- ==============================
+       HERO (portada de inicio)
+       ==============================
+       `min-h-[92vh]` fuerza a que la seccion ocupe casi toda la altura de
+       la pantalla sin importar el dispositivo (valor arbitrario en vh, no
+       un breakpoint fijo en px), asi el hero siempre se siente "a pantalla
+       completa" tanto en celular como en desktop. La imagen de fondo usa
+       `object-cover` para recortarse y llenar el contenedor sin
+       deformarse, y dos degrades superpuestos (`bg-gradient-to-t` vertical
+       + `bg-gradient-to-r` horizontal) oscurecen los bordes para que el
+       texto blanco del centro mantenga contraste sobre cualquier foto. -->
+  <section class="relative flex min-h-[92vh] items-center justify-center overflow-hidden bg-slate-950 lg:min-h-[80vh]">
+    <img
+      src="img/RM-213.jpg" alt="Ciclista de montana en plena competencia"
+      class="absolute inset-0 h-full w-full object-cover opacity-70"
+      style="object-position: center 15%;"
+    >
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/20"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-slate-950/80"></div>
+
+    <div class="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center px-4 text-center animate-fade-up">
+      <span class="mb-4 inline-block rounded-full border border-brand-yellow/60 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-brand-yellow">
+        Fotografia deportiva de accion
+      </span>
+      <h1 class="text-4xl font-extrabold uppercase leading-tight tracking-tight sm:text-5xl md:text-6xl">
+        Revivi tu carrera<br class="hidden sm:block"> en cada foto
+      </h1>
+      <p class="mt-4 max-w-xl text-base text-slate-300 sm:text-lg">
+        Cubrimos running, mountain bike, triatlon y mas. Encontra tus fotos con tu numero de dorsal.
+      </p>
+
+      <!-- Buscador flotante: mismo patron mobile-first que en
+           galeria.html -- flex-col (apilado) por defecto, y recien
+           sm:flex-row junta select + input + boton en una sola fila desde
+           640px, cuando ya hay ancho suficiente para los tres juntos. -->
+      <form id="form-buscar-hero" class="mt-8 flex w-full max-w-2xl flex-col gap-3 rounded-2xl bg-white/10 p-3 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center">
+        <select
+          id="select-evento-hero" required aria-label="Competencia"
+          class="w-full flex-1 rounded-xl border-0 bg-white/90 px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+        >
+          <option value="">Elegi la competencia...</option>
+        </select>
+        <input
+          type="text" id="input-dorsal-hero" required placeholder="Tu numero de dorsal" aria-label="Tu numero de dorsal"
+          class="w-full flex-1 rounded-xl border-0 bg-white/90 px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+        >
+        <button
+          type="submit"
+          class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-red px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-brand-red-dark sm:w-auto"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Buscar
+        </button>
+      </form>
+      <p id="mensaje-hero" class="mt-2 min-h-[1.25rem] text-sm text-red-400"></p>
+    </div>
+
+    <div class="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 animate-bounce text-slate-400">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ==============================
+       COMO FUNCIONA (3 pasos)
+       ==============================
+       `grid` sin columnas explicitas = 1 sola columna por defecto en
+       mobile (las 3 tarjetas se apilan verticalmente); `sm:grid-cols-3`
+       las pone en fila desde 640px. Simple pero suficiente aca porque son
+       solo 3 items de igual importancia, sin necesidad de un breakpoint
+       intermedio en 2 columnas. -->
+  <section class="mx-auto max-w-6xl px-4 py-16">
+    <h2 class="mb-10 text-center text-2xl font-extrabold uppercase tracking-wide text-white sm:text-3xl">
+      Como funciona
+    </h2>
+    <div class="grid gap-6 sm:grid-cols-3">
+      <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-6 text-center transition hover:border-brand-yellow/50">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-red text-xl font-extrabold">1</div>
+        <h3 class="mb-2 font-bold uppercase tracking-wide text-brand-yellow">Busca tu dorsal</h3>
+        <p class="text-sm text-slate-400">Elegi la competencia e ingresa tu numero de placa o dorsal.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-6 text-center transition hover:border-brand-yellow/50">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-red text-xl font-extrabold">2</div>
+        <h3 class="mb-2 font-bold uppercase tracking-wide text-brand-yellow">Elegi tus fotos</h3>
+        <p class="text-sm text-slate-400">Recorre la galeria y agrega al carrito las que mas te gusten.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-6 text-center transition hover:border-brand-yellow/50">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-red text-xl font-extrabold">3</div>
+        <h3 class="mb-2 font-bold uppercase tracking-wide text-brand-yellow">Recibilas por email</h3>
+        <p class="text-sm text-slate-400">Paga con Mercado Pago y descarga tus fotos en alta calidad.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================
+       GALERIA DESTACADA (preview de coberturas, sin lightbox)
+       ==============================
+       Carrusel horizontal de una sola fila (scroll nativo con snap), no
+       grilla: con solo 6-8 fotos de vidriera una grilla de N columnas
+       siempre deja un hueco en la ultima fila si el total no es multiplo
+       exacto de N (el problema original que motivo este cambio). El
+       carrusel evita ese problema de raiz -- no importa cuantas fotos
+       haya, la fila siempre queda prolija -- y de paso se banca sumar mas
+       fotos a futuro sin tener que recalcular columnas. `snap-x
+       snap-mandatory` + `snap-start` en cada tarjeta dan el "click" de
+       alineacion al scrollear (mouse wheel, trackpad o swipe touch);
+       `.scrollbar-none` (utilidad de src/input.css) oculta la barra de
+       scroll nativa para que se vea como un carrusel, no como una lista
+       larga. Es solo vidriera para atraer al home: por eso el link "Ver
+       todas" aparece DOS veces con visibilidad opuesta segun el tamano de
+       pantalla -- `hidden sm:block` arriba (a la derecha del titulo, en
+       desktop) y el link equivalente al final de la seccion usa
+       `sm:hidden` (debajo del carrusel, solo en mobile). -->
+  <section id="seccion-coberturas-destacadas" class="mx-auto max-w-6xl px-4 pb-16">
+    <div class="mb-8 flex items-end justify-between">
+      <h2 class="text-2xl font-extrabold uppercase tracking-wide text-white sm:text-3xl">Ultimas coberturas</h2>
+      <a href="galeria.html" class="hidden text-sm font-semibold text-brand-yellow hover:underline sm:block">Ver todas &rarr;</a>
+    </div>
+    <div class="relative mx-auto max-w-5xl px-4">
+      <!-- Flechas: solo desde md: (desktop/tablet ancha). En mobile el
+           scroll horizontal ya se maneja con swipe nativo, asi que las
+           flechas solo agregan valor donde hay mouse. -->
+      <button
+        type="button" id="btn-carrusel-izq" aria-label="Ver coberturas anteriores"
+        class="absolute left-0 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/80 text-lg text-white shadow-lg transition hover:bg-brand-yellow hover:text-slate-900 md:flex"
+      >&larr;</button>
+
+      <!-- Contenido inyectado por JS (ver script mas abajo) desde
+           GET /api/carrusel-home?destacado=true -- las imagenes que el
+           fotografo carga y destaca desde el modulo "Configurar Home" del
+           dashboard. Sin limite de cantidad fijo en el HTML: agregar o
+           sacar una foto es un CRUD en el dashboard, no una edicion de
+           este archivo. -->
+      <div id="carrusel-coberturas" class="flex select-none snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth scrollbar-none pb-4"></div>
+
+      <button
+        type="button" id="btn-carrusel-der" aria-label="Ver coberturas siguientes"
+        class="absolute right-0 top-1/2 z-10 hidden h-10 w-10 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/80 text-lg text-white shadow-lg transition hover:bg-brand-yellow hover:text-slate-900 md:flex"
+      >&rarr;</button>
+    </div>
+    <a href="galeria.html" class="mt-6 block text-center text-sm font-semibold text-brand-yellow hover:underline sm:hidden">Ver todas &rarr;</a>
+  </section>
+
+  <script>
+    // Cablea las flechas, el autoplay y los datos del carrusel de "Ultimas
+    // coberturas". Vive aca, inline en index.html, porque es logica
+    // exclusiva de esta pagina (ver CLAUDE.md: no hay modulos JS
+    // compartidos para logica especifica de pagina, solo layout.js/cart.js).
+    // `scrollBy`/`scrollTo` con `behavior: 'smooth'` aprovechan el scroll
+    // nativo del navegador -- no hace falta libreria de carrusel para algo
+    // tan simple. No declara su propio `API_BASE`: como este bloque y el
+    // del buscador del hero (mas abajo) son dos <script> distintos pero
+    // comparten el mismo scope lexical global de la pagina, una segunda
+    // `const API_BASE` aca chocaria con la de ese script (`Identifier
+    // 'API_BASE' has already been declared`) -- por eso la ruta va inline.
+
+    // Mini-escape para texto administrado por el fotografo (titulo/url de
+    // cada imagen del carrusel, cargados desde el dashboard) antes de
+    // interpolarlo en innerHTML -- mismo patron que escaparHtmlCob() en
+    // galeria.html.
+    function escaparHtmlHome(texto) {
+      const contenedor = document.createElement('div');
+      contenedor.textContent = texto === null || texto === undefined ? '' : String(texto);
+      return contenedor.innerHTML;
+    }
+
+    (async function () {
+      const seccion = document.getElementById('seccion-coberturas-destacadas');
+      const carrusel = document.getElementById('carrusel-coberturas');
+      const btnIzq = document.getElementById('btn-carrusel-izq');
+      const btnDer = document.getElementById('btn-carrusel-der');
+      if (!seccion || !carrusel || !btnIzq || !btnDer) return;
+
+      let imagenes = [];
+      try {
+        const respuesta = await fetch('/api/carrusel-home?destacado=true');
+        if (!respuesta.ok) throw new Error('No se pudieron cargar las coberturas destacadas');
+        imagenes = await respuesta.json();
+      } catch (error) {
+        console.error(error);
+      }
+
+      // Sin imagenes destacadas todavia (recien instalado, o el fotografo
+      // las desactivo todas): se oculta la seccion entera en vez de mostrar
+      // un carrusel vacio o roto.
+      if (imagenes.length === 0) {
+        seccion.classList.add('hidden');
+        return;
+      }
+
+      carrusel.innerHTML = imagenes
+        .map(
+          (imagen) => `
+        <div class="h-64 w-[260px] min-w-[260px] flex-shrink-0 snap-start overflow-hidden rounded-xl shadow-md md:h-72 md:w-[280px] md:min-w-[280px]">
+          <a href="${escaparHtmlHome(imagen.url)}" class="block">
+            <img src="${imagen.imagenUrl}" alt="${escaparHtmlHome(imagen.titulo)}" class="h-full w-full rounded-xl object-cover object-center transition-transform duration-300 hover:scale-105">
+          </a>
+        </div>`
+        )
+        .join('');
+
+      const AUTOPLAY_INTERVALO_MS = 4000;
+      const SCROLL_PASO_PX = 300;
+      let autoplayId = null;
+
+      // `prefers-reduced-motion: reduce` es un pedido explicito del usuario
+      // (mareo/trastorno vestibular, no gusto esteico) de que nada se mueva
+      // sin que el interactue. Un carrusel que autoplayea es de los casos
+      // mas citados como problema, asi que directamente no arranca el
+      // intervalo para ese grupo; el click manual en las flechas si sigue
+      // funcionando, pero salta ('auto') en vez de deslizar ('smooth').
+      const prefiereMovimientoReducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const comportamientoScroll = prefiereMovimientoReducido ? 'auto' : 'smooth';
+
+      function detenerAutoplay() {
+        if (autoplayId === null) return;
+        clearInterval(autoplayId);
+        autoplayId = null;
+      }
+
+      // Si ya no queda nada para scrollear a la derecha (con 1px de
+      // margen por redondeo de subpixeles), vuelve suavemente al inicio
+      // en vez de quedarse "trabado" en el limite hasta que el usuario
+      // interactue.
+      function avanzarAutoplay() {
+        const limiteScroll = carrusel.scrollWidth - carrusel.clientWidth;
+        if (carrusel.scrollLeft >= limiteScroll - 1) {
+          carrusel.scrollTo({ left: 0, behavior: comportamientoScroll });
+        } else {
+          carrusel.scrollBy({ left: SCROLL_PASO_PX, behavior: comportamientoScroll });
+        }
+      }
+
+      function iniciarAutoplay() {
+        detenerAutoplay();
+        autoplayId = setInterval(avanzarAutoplay, AUTOPLAY_INTERVALO_MS);
+      }
+
+      // Un click manual en cualquiera de las flechas cancela el autoplay
+      // de forma definitiva: si siguiera corriendo en paralelo, el
+      // proximo tick del intervalo pisaria el scroll que acaba de iniciar
+      // el usuario y se verian saltos bruscos superpuestos.
+      btnIzq.addEventListener('click', () => {
+        detenerAutoplay();
+        carrusel.scrollBy({ left: -SCROLL_PASO_PX, behavior: comportamientoScroll });
+      });
+      btnDer.addEventListener('click', () => {
+        detenerAutoplay();
+        carrusel.scrollBy({ left: SCROLL_PASO_PX, behavior: comportamientoScroll });
+      });
+
+      if (!prefiereMovimientoReducido) iniciarAutoplay();
+    })();
+  </script>
+
+  <!-- Slot vacio: components/layout.js inyecta aca el footer completo. -->
+  <footer id="site-footer"></footer>
+
+  <script src="components/layout.js" defer></script>
+  <script src="js/cart.js" defer></script>
+  <script>
+    // Este buscador del hero es "de paso": a diferencia del de
+    // galeria.html, NO muestra resultados en esta misma pagina. Su
+    // unico trabajo es armar la URL con los parametros ?eventoId&dorsal y
+    // redirigir a galeria.html, que es quien realmente hace la
+    // busqueda y renderiza la grilla (ver el bloque `init()` en
+    // galeria.html que lee esos mismos parametros al cargar).
+    const API_BASE = '/api';
+    const selectEventoHero = document.getElementById('select-evento-hero');
+    const formBuscarHero = document.getElementById('form-buscar-hero');
+    const inputDorsalHero = document.getElementById('input-dorsal-hero');
+    const mensajeHero = document.getElementById('mensaje-hero');
+
+    // Mismo fetch de eventos que en galeria.html, duplicado aca porque
+    // cada pagina HTML es independiente (sin modulos JS compartidos entre
+    // archivos <script> inline, solo los .js externos como layout.js/cart.js
+    // se reusan).
+    async function cargarEventosHero() {
+      try {
+        const respuesta = await fetch(`${API_BASE}/eventos?activo=true`);
+        if (!respuesta.ok) throw new Error('No se pudieron cargar las competencias');
+        const eventos = await respuesta.json();
+        eventos.forEach((evento) => {
+          const option = document.createElement('option');
+          option.value = evento.id;
+          option.textContent = `${evento.nombre} - ${evento.fecha}`;
+          selectEventoHero.appendChild(option);
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    formBuscarHero.addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      const eventoId = selectEventoHero.value;
+      const dorsal = inputDorsalHero.value.trim();
+
+      if (!eventoId || !dorsal) {
+        mensajeHero.textContent = 'Elegi una competencia e ingresa tu numero de dorsal.';
+        return;
+      }
+
+      // encodeURIComponent evita que un dorsal con caracteres especiales
+      // (o un eventoId inesperado) rompa el formato de query string al
+      // armar la URL de destino.
+      window.location.href = `galeria.html?eventoId=${encodeURIComponent(eventoId)}&dorsal=${encodeURIComponent(dorsal)}`;
+    });
+
+    cargarEventosHero();
+  </script>
+</body>
+</html>

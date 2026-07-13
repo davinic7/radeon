@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@theme {
+  --color-brand-red: #8C0303;
+  --color-brand-red-dark: #6e0202;
+  --color-brand-yellow: #F2B705;
+  --color-brand-light: #F2F2F2;
+
+  --font-brand: 'Bahnschrift', sans-serif;
+
+  --animate-fade-up: fade-up 0.6s ease-out both;
+  --animate-fade-in: fade-in 0.5s ease-out both;
+  --animate-scale-in: scale-in 0.25s ease-out both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: #0b0f14;
+  }
+
+  /* Usuarios con `prefers-reduced-motion: reduce` (mareo/vestibular, no una
+     preferencia esteica) piden explicitamente que el sistema operativo NO
+     anime transiciones. El scroll suave global de arriba y las animaciones
+     de entrada (fade-up/fade-in/scale-in, usadas en tarjetas, el lightbox y
+     el panel del carrito) se vuelven instantaneas para ese grupo -- misma
+     posicion final, sin la animacion en si. Los `scrollIntoView`/`scrollBy`
+     con `behavior: 'smooth'` disparados desde JS (carrusel del Home,
+     preseleccion de galeria en galeria.html) tienen su propio guard
+     inline en cada script, porque ese `behavior` se pasa por JS y no lo
+     controla esta hoja de estilos. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /*
+   * Grilla masonry tipo Pinterest usando CSS multi-column (`column-count`),
+   * NO un grid de JS ni un plugin. No hay ningun calculo de dimensiones en
+   * JavaScript: el propio navegador es el que decide, foto por foto, en
+   * que columna entra cada una segun el alto acumulado de esa columna
+   * hasta el momento -- por eso cada foto conserva su relacion de aspecto
+   * natural (a diferencia de un CSS Grid clasico, donde todas las celdas
+   * de una fila comparten el mismo alto).
+   *
+   * `column-count` es "mobile-first" via media queries progresivas: arranca
+   * en 2 columnas para pantallas chicas, sube a 3 desde 640px (~tablet) y a
+   * 4 desde 1024px (~desktop), para no dejar columnas demasiado angostas
+   * (fotos chiquitas e ilegibles) en pantallas grandes ni demasiado anchas
+   * (una sola columna gigante) en celulares.
+   */
+  .masonry {
+    column-count: 2;
+    column-gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .masonry { column-count: 3; }
+  }
+  @media (min-width: 1024px) {
+    .masonry { column-count: 4; }
+  }
+  /* Cada hijo directo de .masonry (tarjeta o <img>/<figure>) NUNCA se
+   * puede partir entre dos columnas (`break-inside: avoid`) -- sin esto,
+   * una foto alta podria quedar cortada a la mitad, con el resto
+   * "saltando" a la columna siguiente. El margin-bottom simula el gap
+   * vertical entre fotos: `column-gap` de arriba solo controla el espacio
+   * HORIZONTAL entre columnas, CSS multi-column no tiene un equivalente a
+   * `row-gap`. */
+  .masonry > * {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+
+  /*
+   * Marca de agua diagonal repetida sobre las previews publicas (fotos de
+   * baja resolucion que se muestran ANTES de pagar). Se implementa 100%
+   * en CSS con un pseudo-elemento ::after en vez de superponer una <img>
+   * o dibujar en un <canvas>, porque el texto de la marca es siempre el
+   * mismo string ("RIDEON FOTO DEPORTIVA") y no cambia por foto -- usar
+   * `content: attr(data-watermark)` permite reusar exactamente el mismo
+   * bloque de CSS en cualquier imagen del sitio con solo agregarle la
+   * clase `watermark-diagonal` y el atributo `data-watermark="..."` en el
+   * HTML (ver galeria.html, tanto en la grilla como en el lightbox).
+   */
+  .watermark-diagonal {
+    position: relative; /* ancla de referencia para el ::after absolute */
+  }
+  .watermark-diagonal::after {
+    content: attr(data-watermark);
+    position: absolute;
+    inset: 0; /* el pseudo-elemento cubre exactamente el mismo area que su contenedor */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* centra el texto de la marca sobre la foto */
+    color: rgba(255, 255, 255, 0.28); /* semitransparente: se lee la marca sin tapar del todo la foto */
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transform: rotate(-32deg); /* inclinacion diagonal clasica de watermark, dificulta recortarla */
+    pointer-events: none; /* deja pasar los clicks hacia la imagen/boton de abajo, la marca no es clickeable */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+}

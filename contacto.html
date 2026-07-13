@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacto - RIDEON FOTO DEPORTIVA</title>
+  <link rel="stylesheet" href="css/tailwind.css">
+  <link rel="shortcut icon" href="/img logos/Logo_Negro.png" type="image/x-icon">
+</head>
+<body data-page="contacto" class="min-h-screen bg-slate-950 font-brand text-white">
+
+  <!-- Slot vacio: components/layout.js inyecta aca el header/nav completo. -->
+  <header id="site-header"></header>
+
+  <section class="mx-auto max-w-5xl px-4 py-16">
+    <h1 class="mb-8 text-center text-3xl font-extrabold uppercase tracking-wide sm:text-4xl">Contacto</h1>
+
+    <div class="mx-auto max-w-md text-center">
+      <h2 class="mb-2 text-2xl font-extrabold uppercase tracking-wide">Formulario de contacto</h2>
+      <p class="mb-8 text-sm text-slate-400">
+        Tenes dudas sobre una cobertura, un problema con tus fotos o queres saber mas sobre nuestros servicios?
+        Completa el siguiente formulario y nuestro equipo se pondra en contacto con vos a la brevedad.
+      </p>
+
+      <!-- El formulario mismo no necesita layout responsivo propio: todos
+           sus campos ya son `w-full` (ancho completo del contenedor
+           `max-w-md`), asi que se ve bien tanto en mobile como en
+           desktop sin breakpoints adicionales. -->
+      <form id="form-contacto" class="rounded-2xl border border-white/10 bg-slate-900/60 p-6 text-left shadow-xl">
+        <label class="mb-1 block text-sm text-slate-300">Nombre y apellido</label>
+        <input id="input-nombre" type="text" required class="mb-4 w-full rounded-lg border border-white/10 bg-slate-800 p-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-yellow">
+
+        <label class="mb-1 block text-sm text-slate-300">Correo electronico</label>
+        <input id="input-email" type="email" required class="mb-4 w-full rounded-lg border border-white/10 bg-slate-800 p-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-yellow">
+
+        <label class="mb-1 block text-sm text-slate-300">Pais</label>
+        <select class="mb-4 w-full rounded-lg border border-white/10 bg-slate-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow">
+          <option>Argentina</option>
+          <option>Otro</option>
+        </select>
+
+        <label class="mb-1 block text-sm text-slate-300">Consulta relacionada con</label>
+        <select class="mb-4 w-full rounded-lg border border-white/10 bg-slate-800 p-2 text-white focus:outline-none focus:ring-2 focus:ring-brand-yellow">
+          <option>Fotografia deportiva</option>
+          <option>Eventos</option>
+          <option>Cobertura</option>
+          <option>Otro</option>
+        </select>
+
+        <label class="mb-1 block text-sm text-slate-300">Mensaje</label>
+        <textarea id="input-mensaje" required rows="4" class="mb-4 w-full rounded-lg border border-white/10 bg-slate-800 p-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-yellow"></textarea>
+
+        <label class="mb-1 block text-sm text-slate-300">Adjuntar archivo (max. 2MB)</label>
+        <input type="file" class="mb-4 w-full text-sm text-slate-400">
+
+        <p id="contacto-estado" class="mb-4 min-h-[1.25rem] text-center text-sm"></p>
+
+        <button id="btn-enviar-contacto" type="submit" class="w-full rounded-lg bg-brand-red px-4 py-3 font-bold text-white transition hover:bg-brand-red-dark disabled:cursor-not-allowed disabled:opacity-60">
+          Enviar mensaje
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Slot vacio: components/layout.js inyecta aca el footer completo. -->
+  <footer id="site-footer"></footer>
+
+  <script src="components/layout.js" defer></script>
+  <script src="js/cart.js" defer></script>
+  <script>
+    // Este script no depende de RideonCart ni de 'layout:ready': el
+    // formulario ya existe en el HTML propio de esta pagina (no fue
+    // inyectado por layout.js), asi que se puede cablear directo sin
+    // esperar ningun evento.
+    const formContacto = document.getElementById('form-contacto');
+    const contactoEstado = document.getElementById('contacto-estado');
+    const btnEnviarContacto = document.getElementById('btn-enviar-contacto');
+
+    formContacto.addEventListener('submit', async (evento) => {
+      evento.preventDefault(); // evita el submit nativo (que recargaria la pagina)
+
+      const nombre = document.getElementById('input-nombre').value.trim();
+      const email = document.getElementById('input-email').value.trim();
+      const mensaje = document.getElementById('input-mensaje').value.trim();
+
+      // Validacion minima en el cliente (los 3 campos ya son `required` en
+      // el HTML, esto es una segunda barrera antes de gastar un fetch).
+      if (!nombre || !email || !mensaje) return;
+
+      // Estado "en vuelo": deshabilita el boton (evita doble envio) y
+      // muestra un mensaje neutro mientras se espera la respuesta del
+      // servidor.
+      btnEnviarContacto.disabled = true;
+      contactoEstado.textContent = 'Enviando...';
+      contactoEstado.className = 'mb-4 min-h-[1.25rem] text-center text-sm text-slate-400';
+
+      try {
+        const respuesta = await fetch('/api/contacto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, email, mensaje }),
+        });
+
+        if (!respuesta.ok) throw new Error('Error al enviar el mensaje');
+
+        // Exito: mensaje en verde (emerald) y se limpia el formulario
+        // entero con `.reset()` para que quede listo para un nuevo envio.
+        contactoEstado.textContent = 'Gracias, recibimos tu mensaje. Te contactaremos a la brevedad.';
+        contactoEstado.className = 'mb-4 min-h-[1.25rem] text-center text-sm text-emerald-400';
+        formContacto.reset();
+      } catch (error) {
+        // Fallo de red o respuesta no-OK: mensaje en rojo, se deja lo ya
+        // tipeado en el formulario (no se llama a reset()) para que el
+        // usuario no tenga que reescribir todo al reintentar.
+        console.error(error);
+        contactoEstado.textContent = 'Ocurrio un error al enviar tu mensaje. Intenta de nuevo.';
+        contactoEstado.className = 'mb-4 min-h-[1.25rem] text-center text-sm text-red-400';
+      } finally {
+        btnEnviarContacto.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

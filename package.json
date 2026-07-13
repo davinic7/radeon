@@ -1,0 +1,15 @@
+{
+  "name": "rideon-foto-deportiva",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend estatico de RIDEON FOTO DEPORTIVA - build de Tailwind CSS",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./css/tailwind.css --minify",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./css/tailwind.css --watch",
+    "serve": "npx serve ."
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.2",
+    "tailwindcss": "^4.3.2"
+  }
+}

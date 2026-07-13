@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nosotros - RIDEON FOTO DEPORTIVA</title>
+  <link rel="stylesheet" href="css/tailwind.css">
+  <link rel="shortcut icon" href="/img logos/Logo_Negro.png" type="image/x-icon">
+</head>
+<body data-page="nosotros" class="min-h-screen bg-slate-950 font-brand text-white">
+
+  <!-- Slot vacio: components/layout.js inyecta aca el header/nav completo. -->
+  <header id="site-header"></header>
+
+  <!-- Pagina 100% estatica: sin <script> propio, solo texto institucional.
+       `max-w-4xl` limita el ancho de lectura (evita lineas de texto
+       demasiado largas en pantallas anchas) y centra la seccion con
+       `mx-auto`. -->
+  <section class="mx-auto max-w-4xl px-4 py-16">
+    <h1 class="mb-8 text-center text-3xl font-extrabold uppercase tracking-wide sm:text-4xl">Sobre nosotros</h1>
+
+    <p class="mb-6 text-center text-slate-300">
+      En <strong class="text-white">RIDEON</strong>, no solo capturamos imagenes: <em>inmortalizamos momentos unicos en el deporte</em>,
+      con una mirada artistica que resalta la esencia de cada disciplina. Creemos que <strong class="text-white">cada movimiento tiene una historia</strong>,
+      y cada historia merece ser contada con pasion, creatividad y respeto por el esfuerzo del atleta.
+    </p>
+    <p class="mb-10 text-center text-slate-300">
+      Desde el vertigo de una bicicleta en descenso hasta la concentracion de un arquero antes de disparar, nos proponemos mostrar
+      <strong class="text-white">el lado humano, emocional y estetico del deporte</strong>, sin importar la disciplina ni el nivel.
+      En cada cobertura, buscamos <em>transmitir la energia, el coraje y la belleza de cada instante</em>.
+    </p>
+
+    <!-- Mision/Vision: 1 columna en mobile (apiladas), 2 columnas desde
+         `sm:` (640px+) -- mismo patron mobile-first que el resto del sitio. -->
+    <div class="grid gap-6 sm:grid-cols-2">
+      <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+        <h3 class="mb-2 text-center text-xl font-bold uppercase tracking-wide text-brand-yellow">Mision</h3>
+        <p class="text-center text-sm text-slate-300">
+          Documentar el deporte desde una perspectiva artistica y sensible, elevando cada imagen mas alla de lo tecnico,
+          y mostrando el alma del momento con profesionalismo y emocion.
+        </p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+        <h3 class="mb-2 text-center text-xl font-bold uppercase tracking-wide text-brand-yellow">Vision</h3>
+        <p class="text-center text-sm text-slate-300">
+          Ser referentes en fotografia deportiva artistica en el pais y la region, ofreciendo una propuesta visual
+          unica, emocional y profesional en cada cobertura.
+        </p>
+      </div>
+    </div>
+
+    <p class="mt-10 text-center text-slate-400">
+      <strong class="text-white">RIDEON</strong> es mas que un equipo: somos un grupo de personas apasionadas por el deporte y la imagen,
+      que se superan cada dia para ofrecer una mirada distinta, poderosa y honesta de lo que realmente significa moverse, competir, sonar y ganar.
+    </p>
+
+    <div class="mt-12 flex flex-col items-center">
+      <img src="img/Perfil.jpg" alt="Jose Guevara - RIDEON" class="h-40 w-40 rounded-full object-cover shadow-lg ring-2 ring-brand-yellow/50">
+      <p class="mt-3 text-sm text-slate-400">Jose Guevara &ndash; RIDEON</p>
+    </div>
+  </section>
+
+  <!-- ==============================
+       GALERIA (portfolio, sin lightbox)
+       ==============================
+       Fotos de muestra del trabajo del equipo, no fotos individuales que
+       un cliente pueda comprar por dorsal -- por eso esta grilla es
+       puramente HTML, sin lightbox ni integracion con el carrito (esa
+       logica vive en galeria.html, la pagina de busqueda por dorsal).
+       `.masonry` (definida en src/input.css) es la misma clase que usa
+       galeria.html: columnas CSS responsivas (2 en mobile, 3 desde 640px,
+       4 desde 1024px) donde cada foto conserva su alto natural. -->
+  <section class="mx-auto max-w-7xl px-4 pb-16">
+    <div class="mb-10 text-center">
+      <h2 class="text-2xl font-extrabold uppercase tracking-wide text-white sm:text-3xl">Galería</h2>
+      <p class="mx-auto mt-3 max-w-2xl text-slate-400">
+        Una seleccion de los mejores momentos que capturamos en nuestras coberturas. Si sos vos el que aparece,
+        buscá tu dorsal para encontrar tu galeria completa.
+      </p>
+      <a
+        href="galeria.html"
+        class="mt-6 inline-block rounded-xl bg-brand-red px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-brand-red-dark"
+      >
+        Buscar mi dorsal
+      </a>
+    </div>
+
+    <div class="masonry">
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 1.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 2.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 3.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 4.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 5.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 6.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 7.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 8.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 9.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+      <figure class="group relative overflow-hidden rounded-xl">
+        <img src="img/FOTO 10.jpg" alt="Mejor foto deportiva" class="w-full object-cover transition duration-500 group-hover:scale-105">
+      </figure>
+    </div>
+  </section>
+
+  <!-- Slot vacio: components/layout.js inyecta aca el footer completo. -->
+  <footer id="site-footer"></footer>
+
+  <script src="components/layout.js" defer></script>
+  <script src="js/cart.js" defer></script>
+</body>
+</html>

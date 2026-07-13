@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos - RIDEON FOTO DEPORTIVA</title>
+  <link rel="stylesheet" href="css/tailwind.css">
+  <link rel="shortcut icon" href="/img logos/Logo_Negro.png" type="image/x-icon">
+</head>
+<body data-page="galeria" class="min-h-screen bg-slate-950 font-brand text-white">
+
+  <!-- Slot vacio: components/layout.js inyecta aca el <nav> completo en
+       runtime (ver ese archivo para el detalle del render). -->
+  <header id="site-header"></header>
+
+  <!-- ==============================
+       BUSCADOR DE FOTOS POR DORSAL
+       ==============================
+       Formulario: elegir competencia (select poblado via fetch a la API)
+       + numero de dorsal. Es "mobile-first": el <form> apila el select, el
+       input y el boton en columna (flex-col, comportamiento por defecto)
+       y recien desde `sm:` (640px+) pasa a fila (`sm:flex-row`), porque en
+       una pantalla angosta tres campos en fila quedarian demasiado
+       apretados para tocar con el dedo. -->
+  <section class="relative overflow-hidden bg-slate-950 px-4 py-14">
+    <!-- Imagen de fondo decorativa + degrade oscuro encima para que el
+         texto siga siendo legible sobre la foto (contraste). -->
+    <img src="img/RM-213.jpg" alt="" class="absolute inset-0 h-full w-full object-cover opacity-25">
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-950/90 to-slate-950"></div>
+
+    <div class="relative z-10 mx-auto max-w-2xl text-center">
+      <h1 class="text-2xl font-extrabold uppercase tracking-wide sm:text-3xl">Encontra tus fotos</h1>
+      <p class="mt-2 text-sm text-slate-400">Elegi la competencia e ingresa tu numero de dorsal para ver tu galeria.</p>
+
+      <form id="form-buscar-fotos" class="mt-6 flex flex-col gap-3 rounded-2xl bg-white/10 p-3 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center">
+        <!-- Se puebla dinamicamente con <option> por cargarEventos() (ver
+             script mas abajo); arranca con un unico placeholder. -->
+        <select
+          id="select-evento" required aria-label="Competencia"
+          class="w-full flex-1 rounded-xl border-0 bg-white/90 px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+        >
+          <option value="">Elegi la competencia...</option>
+        </select>
+        <input
+          type="text" id="input-dorsal" required placeholder="Numero de dorsal" aria-label="Numero de dorsal"
+          class="w-full flex-1 rounded-xl border-0 bg-white/90 px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+        >
+        <button
+          type="submit"
+          class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-red px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-brand-red-dark sm:w-auto"
+        >
+          Buscar
+        </button>
+      </form>
+      <p id="mensaje-busqueda" class="mt-3 min-h-[1.25rem] text-sm text-slate-400"></p>
+    </div>
+  </section>
+
+  <!-- ==============================
+       EVENTOS PASADOS (galerias con fotos reales)
+       ==============================
+       Poblada por renderGaleriasPasadas() (ver script mas abajo) a partir
+       de GET /api/eventos?activo=true -- el mismo array que llena el
+       <select> del buscador de arriba. Por eso todo evento activo aparece
+       siempre con el badge "Galeria disponible": si existe como `Evento`,
+       ya es una competencia que corrio y tiene (o va a tener) fotos
+       cargadas. -->
+  <section class="border-t border-white/10 bg-slate-950 px-4 py-16">
+    <div class="mx-auto max-w-6xl">
+      <h2 class="mb-8 text-2xl font-extrabold uppercase tracking-wide text-white sm:text-3xl">Eventos pasados</h2>
+      <div id="grid-galerias-pasadas" class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+        <p class="col-span-full text-center text-sm text-slate-500">Cargando coberturas...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================
+       RESULTADOS DE LA BUSQUEDA (GRILLA MASONRY)
+       ==============================
+       Arranca "hidden": recien se muestra cuando buscarFotos() encuentra
+       al menos una foto. `#grid-resultados` es el contenedor donde
+       renderizarResultados() inyecta una tarjeta <div> por foto; la clase
+       `.masonry` (definida en src/input.css) es la que arma la grilla tipo
+       Pinterest usando `column-count` responsivo -- ver ese archivo para
+       el detalle de como se calculan las columnas por breakpoint. -->
+  <section id="seccion-resultados" class="mx-auto max-w-7xl px-4 py-10 hidden">
+    <div id="grid-resultados" class="masonry"></div>
+  </section>
+
+  <!-- Slot vacio: components/layout.js inyecta aca el footer completo. -->
+  <footer id="site-footer"></footer>
+
+  <!-- ==============================
+       MODAL: Galeria completa de un evento
+       ==============================
+       Se abre al tocar una tarjeta de "Eventos pasados" (ver
+       abrirGaleriaEvento() en el script) -- en vez de inyectar los
+       resultados sueltos en medio de la pagina, la galeria completa del
+       evento se ve en su propia "ventana" superpuesta, igual de contenida
+       que el lightbox de una foto individual. Tocar una foto adentro abre
+       ESE MISMO lightbox (#lightbox, mas abajo) para verla grande o
+       agregarla al carrito -- reusa crearTarjetaFoto()/fotosActuales, el
+       mismo mecanismo que #seccion-resultados. -->
+  <div id="modal-galeria-evento" class="fixed inset-0 z-40 hidden items-start justify-center overflow-y-auto bg-slate-950/95 p-4 py-10">
+    <div class="w-full max-w-6xl">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h2 id="modal-galeria-evento-titulo" class="text-xl font-extrabold uppercase tracking-wide text-white sm:text-2xl">&mdash;</h2>
+          <p id="modal-galeria-evento-mensaje" class="mt-1 text-sm text-slate-400"></p>
+        </div>
+        <button id="btn-cerrar-modal-galeria-evento" aria-label="Cerrar" class="shrink-0 rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-7 w-7">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div id="modal-galeria-evento-grid" class="masonry"></div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       LIGHTBOX (visor de foto a pantalla completa)
+       ==============================
+       Un unico modal reusado para TODAS las fotos del resultado (no se
+       crea un lightbox por foto). abrirLightbox()/mostrarFotoLightbox()
+       en el script de mas abajo solo cambian el `src` de #lightbox-imagen
+       y los textos de dorsal/precio; nunca se recrea este bloque de HTML.
+       Arranca "hidden"; cuando se abre se le suman las clases `flex` (para
+       centrar su contenido) y se le quita `hidden`. -->
+  <div id="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/95 p-4">
+    <button id="btn-cerrar-lightbox" aria-label="Cerrar" class="absolute right-4 top-4 rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-7 w-7">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- Flechas de navegacion anterior/siguiente. Posicionadas con
+         `absolute` + `top-1/2 -translate-y-1/2` para quedar centradas
+         verticalmente sin importar la altura de la imagen mostrada.
+         Se acercan mas al borde en mobile (`left-2`/`right-2`) y se alejan
+         un poco en pantallas grandes (`sm:left-6`/`sm:right-6`) para no
+         superponerse tanto con la foto. -->
+    <button id="btn-lightbox-anterior" aria-label="Foto anterior" class="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 sm:left-6">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    <button id="btn-lightbox-siguiente" aria-label="Foto siguiente" class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 sm:right-6">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+
+    <div class="flex max-h-full max-w-4xl flex-col items-center gap-4 animate-scale-in">
+      <!-- `watermark-diagonal` (definida en src/input.css) superpone el
+           texto "RIDEON FOTO DEPORTIVA" en diagonal sobre la preview, para
+           que no se pueda usar la imagen de baja resolucion sin pagar. -->
+      <div class="watermark-diagonal max-h-[70vh] overflow-hidden rounded-xl" data-watermark="RIDEON FOTO DEPORTIVA">
+        <img id="lightbox-imagen" src="" alt="" class="max-h-[70vh] w-auto max-w-full object-contain">
+      </div>
+      <div class="flex w-full max-w-md items-center justify-between gap-3 rounded-xl bg-slate-900 p-3">
+        <div class="text-sm">
+          <p class="font-semibold">Dorsal <span id="lightbox-dorsal"></span></p>
+          <p id="lightbox-precio" class="text-brand-yellow"></p>
+        </div>
+        <!-- Mismo dato (RideonCart.alternar) que el boton "Agregar al
+             carrito" de la tarjeta en la grilla: el lightbox es solo otra
+             vista de la misma foto, no un flujo de carrito separado. -->
+        <button id="btn-lightbox-carrito" type="button" class="rounded-lg bg-brand-yellow px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-yellow-400">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- layout.js primero (inyecta header/footer y dispara 'layout:ready'),
+       cart.js despues (escucha ese evento para cablearse al boton del
+       carrito). El orden de estos dos <script defer> importa: aunque
+       "defer" ejecuta en orden de aparicion, si se invirtieran cart.js
+       intentaria usar el header antes de que exista. -->
+  <script src="components/layout.js" defer></script>
+  <script src="js/cart.js" defer></script>
+  <script>
+    // ---------- Referencias al DOM ----------
+    // Se agarran todas juntas al principio del script porque, al estar
+    // declaradas en el HTML de esta misma pagina (no inyectadas por
+    // layout.js), ya existen en el momento en que este <script defer>
+    // corre (defer espera a que el parser termine el HTML antes de
+    // ejecutar el script).
+    const API_BASE = '/api';
+
+    const selectEvento = document.getElementById('select-evento');
+    const formBuscar = document.getElementById('form-buscar-fotos');
+    const inputDorsal = document.getElementById('input-dorsal');
+    const mensajeBusqueda = document.getElementById('mensaje-busqueda');
+    const seccionResultados = document.getElementById('seccion-resultados');
+    const gridResultados = document.getElementById('grid-resultados');
+    const gridGaleriasPasadas = document.getElementById('grid-galerias-pasadas');
+
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImagen = document.getElementById('lightbox-imagen');
+    const lightboxDorsal = document.getElementById('lightbox-dorsal');
+    const lightboxPrecio = document.getElementById('lightbox-precio');
+    const btnLightboxCarrito = document.getElementById('btn-lightbox-carrito');
+
+    // `fotosActuales` guarda el ULTIMO resultado de busqueda (el array
+    // completo de fotos que devolvio la API). El lightbox navega sobre
+    // este mismo array por indice (`indiceLightbox`), en vez de leer el
+    // DOM, porque es mas simple: "foto siguiente" es solo
+    // `indiceLightbox + 1` sobre datos, no hay que buscar el proximo nodo
+    // hermano en el grid ni recalcular posiciones visuales.
+    let fotosActuales = [];
+    // -1 significa "lightbox cerrado / sin foto seleccionada". Se usa
+    // tanto para decidir si hay que repintar el boton del lightbox
+    // (actualizarEstadoBotones) como, indirectamente, para el `%` en
+    // moverLightbox().
+    let indiceLightbox = -1;
+
+    function formatearPrecio(valor) {
+      return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(valor);
+    }
+
+    // Trae la lista de competencias activas y las agrega como <option> al
+    // <select>. Se llama una vez al iniciar la pagina (ver init() al final
+    // del script). Devuelve el array de eventos porque init() lo necesita
+    // para validar los parametros ?eventoId&dorsal de la URL.
+    async function cargarEventos() {
+      try {
+        const respuesta = await fetch(`${API_BASE}/eventos?activo=true`);
+        if (!respuesta.ok) throw new Error('No se pudieron cargar las competencias');
+        const eventos = await respuesta.json();
+        eventos.forEach((evento) => {
+          const option = document.createElement('option');
+          option.value = evento.id;
+          option.textContent = `${evento.nombre} - ${evento.fecha}`;
+          selectEvento.appendChild(option);
+        });
+        renderGaleriasPasadas(eventos);
+        return eventos;
+      } catch (error) {
+        console.error(error);
+        gridGaleriasPasadas.innerHTML = `<p class="col-span-full text-center text-sm text-red-400">No se pudieron cargar las coberturas.</p>`;
+        return [];
+      }
+    }
+
+    // `new Date('YYYY-MM-DD')` se parsea como UTC medianoche: en timezones
+    // negativos (como Argentina) `toLocaleDateString` puede mostrar un dia
+    // antes. Se arman los componentes en horario local para evitarlo.
+    function formatearFechaLarga(fechaISO) {
+      const [anio, mes, dia] = fechaISO.split('-').map(Number);
+      return new Date(anio, mes - 1, dia).toLocaleDateString('es-AR', {
+        day: 'numeric', month: 'long', year: 'numeric',
+      });
+    }
+
+    // Pinta la grilla de "Eventos pasados" a partir del mismo array de
+    // `GET /api/eventos?activo=true` que puebla el <select> del buscador:
+    // todo `Evento` real ya es, por definicion, una competencia que corrio
+    // y tiene (o va a tener) galeria de fotos. Sin `portadaUrl` cargado se
+    // muestra un placeholder con icono en vez de romper el layout con un
+    // <img> vacio.
+    function renderGaleriasPasadas(eventos) {
+      if (eventos.length === 0) {
+        gridGaleriasPasadas.innerHTML = `<p class="col-span-full text-center text-sm text-slate-500">Todavia no hay coberturas cargadas.</p>`;
+        return;
+      }
+
+      gridGaleriasPasadas.innerHTML = eventos
+        .map((evento) => {
+          // Altura fija moderada (h-56): el aspect-[3/4] anterior hacia la
+          // tarjeta enorme en pantallas anchas. h-56 sigue siendo mas
+          // "vertical" que el h-40 original, sin desbordar.
+          const portada = evento.portadaUrl
+            ? `<img src="${evento.portadaUrl}" alt="${escaparHtmlCob(evento.nombre)}" class="h-56 w-full object-cover object-center transition duration-500 group-hover:scale-105">`
+            : `<div class="flex h-56 w-full items-center justify-center bg-gradient-to-br from-brand-red/30 to-slate-800">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-12 w-12 text-white/25"><rect x="3" y="7" width="18" height="13" rx="2"></rect><circle cx="12" cy="13.5" r="3.5"></circle><path d="M8 7l1.5-2.5h5L16 7"></path></svg>
+               </div>`;
+
+          // Redondela de logo: sale de la portada como un sibling suyo (no
+          // adentro del div "relative overflow-hidden" que la contiene), asi
+          // el -mt- negativo la levanta sobre el borde inferior de la
+          // portada sin que ese overflow-hidden se la recorte. h-24: mas
+          // grande todavia que la vuelta anterior (h-20), que seguia
+          // viendose chica al lado de la portada.
+          const logoBadge = evento.logoUrl
+            ? `<div class="relative z-10 flex justify-center">
+                 <img src="${evento.logoUrl}" alt="Logo ${escaparHtmlCob(evento.nombre)}" class="-mt-12 h-24 w-24 rounded-full border-4 border-slate-900 bg-slate-900 object-cover shadow-lg">
+               </div>`
+            : '';
+
+          return `
+        <button type="button" data-galeria-id="${evento.id}" class="group flex flex-col overflow-hidden rounded-2xl bg-slate-900/60 text-left shadow-md ring-1 ring-white/10 transition hover:ring-brand-yellow">
+          <div class="relative overflow-hidden">
+            ${portada}
+            <span class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>
+              Galería disponible
+            </span>
+          </div>
+          ${logoBadge}
+          <div class="flex flex-1 flex-col gap-1 p-5">
+            <h3 class="font-bold text-white">${escaparHtmlCob(evento.nombre)}</h3>
+            <p class="text-sm text-slate-400">${formatearFechaLarga(evento.fecha)}${evento.ubicacion ? ` &middot; ${escaparHtmlCob(evento.ubicacion)}` : ''}</p>
+          </div>
+        </button>`;
+        })
+        .join('');
+
+      gridGaleriasPasadas.querySelectorAll('[data-galeria-id]').forEach((tarjeta) => {
+        const evento = eventos.find((e) => String(e.id) === tarjeta.dataset.galeriaId);
+        tarjeta.addEventListener('click', () => abrirGaleriaEvento(tarjeta.dataset.galeriaId, evento?.nombre));
+      });
+    }
+
+    // Referencias del modal "ventana" de galeria completa de un evento.
+    const modalGaleriaEvento = document.getElementById('modal-galeria-evento');
+    const modalGaleriaEventoTitulo = document.getElementById('modal-galeria-evento-titulo');
+    const modalGaleriaEventoMensaje = document.getElementById('modal-galeria-evento-mensaje');
+    const modalGaleriaEventoGrid = document.getElementById('modal-galeria-evento-grid');
+    const btnCerrarModalGaleriaEvento = document.getElementById('btn-cerrar-modal-galeria-evento');
+
+    // Tocar una tarjeta de "Eventos pasados" abre la galeria COMPLETA de
+    // ese evento (sin pedir dorsal) en su propia ventana modal -- usa el
+    // mismo GET /api/fotos/buscar de siempre, ahora con `dorsal` opcional
+    // en el backend. No toca el buscador de arriba (select/dorsal): ese
+    // sigue siendo la busqueda exacta tradicional, independiente.
+    async function abrirGaleriaEvento(eventoId, nombreEvento) {
+      modalGaleriaEventoTitulo.textContent = nombreEvento || '';
+      modalGaleriaEventoMensaje.textContent = 'Cargando galeria...';
+      modalGaleriaEventoGrid.innerHTML = '';
+      modalGaleriaEvento.classList.remove('hidden');
+      modalGaleriaEvento.classList.add('flex');
+      document.body.classList.add('overflow-hidden');
+
+      try {
+        const respuesta = await fetch(`${API_BASE}/fotos/buscar?eventoId=${encodeURIComponent(eventoId)}`);
+        if (!respuesta.ok) throw new Error('Error al cargar la galeria');
+        const fotos = await respuesta.json();
+        modalGaleriaEventoMensaje.textContent = fotos.length
+          ? `${fotos.length} foto(s).`
+          : 'Este evento todavia no tiene fotos cargadas.';
+        renderModalGaleriaEvento(fotos);
+      } catch (error) {
+        console.error(error);
+        modalGaleriaEventoMensaje.textContent = 'Ocurrio un error al cargar la galeria. Intenta de nuevo.';
+      }
+    }
+
+    function cerrarModalGaleriaEvento() {
+      modalGaleriaEvento.classList.add('hidden');
+      modalGaleriaEvento.classList.remove('flex');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    btnCerrarModalGaleriaEvento.addEventListener('click', cerrarModalGaleriaEvento);
+    modalGaleriaEvento.addEventListener('click', (evento) => {
+      if (evento.target === modalGaleriaEvento) cerrarModalGaleriaEvento();
+    });
+
+    // Mini-escape reusado solo en esta pagina para nombre/ubicacion de
+    // evento (texto administrado por el fotografo en el dashboard, no
+    // input publico -- ver el mismo patron y su justificacion en
+    // dashboard.html).
+    function escaparHtmlCob(texto) {
+      const contenedor = document.createElement('div');
+      contenedor.textContent = texto === null || texto === undefined ? '' : String(texto);
+      return contenedor.innerHTML;
+    }
+
+    // Clase completa (no solo un toggle) del boton "Agregar al carrito" de
+    // cada tarjeta, segun si esa foto ya esta en el carrito. Se recalcula
+    // el className entero en vez de solo agregar/quitar una clase porque
+    // el color de fondo, el color de texto y el hover cambian todos juntos
+    // entre el estado "agregada" (verde) y "no agregada" (amarillo).
+    function botonCarritoClases(activo) {
+      return activo
+        ? 'btn-agregar-carrito absolute bottom-3 right-3 left-3 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-500'
+        : 'btn-agregar-carrito absolute bottom-3 right-3 left-3 rounded-lg bg-brand-yellow px-3 py-2 text-sm font-bold text-slate-900 shadow-lg transition hover:bg-yellow-400';
+    }
+
+    // Repinta TODOS los botones "Agregar al carrito" de la grilla (y el
+    // del lightbox si esta abierto) para que reflejen el estado actual del
+    // carrito. Se registra como suscriptor de RideonCart (ver el listener
+    // de 'layout:ready' mas abajo) y por eso se re-ejecuta automaticamente
+    // cada vez que se agrega/quita una foto desde CUALQUIER lugar --
+    // incluyendo el panel lateral del carrito, no solo esta pagina.
+    function actualizarEstadoBotones() {
+      document.querySelectorAll('[data-foto-id]').forEach((boton) => {
+        const enCarrito = window.RideonCart && window.RideonCart.tiene(boton.dataset.fotoId);
+        boton.className = botonCarritoClases(enCarrito);
+        boton.textContent = enCarrito ? 'Agregada ✓' : 'Agregar al carrito';
+      });
+
+      if (indiceLightbox >= 0) {
+        actualizarBotonLightbox();
+      }
+    }
+
+    // Crea la tarjeta <div> de UNA foto (imagen watermarkeada + boton de
+    // carrito), cableada para abrir el lightbox en la posicion `indice`.
+    // Comun a #grid-resultados (busqueda por dorsal) Y al modal de galeria
+    // completa de un evento -- quien llama es responsable de haber seteado
+    // `fotosActuales` con el mismo array que se esta pintando, para que el
+    // lightbox navegue sobre los datos correctos.
+    function crearTarjetaFoto(foto, indice) {
+      const tarjeta = document.createElement('div');
+      // `group` habilita que el `group-hover:scale-105` de la imagen
+      // interna reaccione al hover sobre TODA la tarjeta, no solo sobre
+      // la imagen en si (patron de Tailwind para hover compuesto).
+      tarjeta.className = 'group relative overflow-hidden rounded-xl bg-slate-900 shadow-lg';
+
+      const enCarrito = window.RideonCart && window.RideonCart.tiene(foto.id);
+
+      tarjeta.innerHTML = `
+        <div class="watermark-diagonal cursor-zoom-in" data-watermark="RIDEON FOTO DEPORTIVA" data-abrir-lightbox="${indice}">
+          <img src="${foto.previewUrl}" alt="Foto dorsal ${foto.dorsal}" loading="lazy" class="w-full object-cover transition duration-500 group-hover:scale-105">
+        </div>
+        <button
+          data-foto-id="${foto.id}"
+          class="${botonCarritoClases(enCarrito)}"
+        >
+          ${enCarrito ? 'Agregada ✓' : 'Agregar al carrito'}
+        </button>
+      `;
+
+      // Click en la imagen -> abre el lightbox en esa posicion. Click en
+      // el boton "Agregar al carrito" -> alterna el carrito, pero con
+      // `stopPropagation()` para que el click NO burbujee hasta el <div>
+      // padre y dispare tambien abrirLightbox() (los dos elementos estan
+      // superpuestos: el boton flota con `absolute` sobre la imagen).
+      tarjeta.querySelector('[data-abrir-lightbox]').addEventListener('click', () => abrirLightbox(indice));
+      tarjeta.querySelector('.btn-agregar-carrito').addEventListener('click', (evento) => {
+        evento.stopPropagation();
+        window.RideonCart.alternar(foto);
+      });
+
+      return tarjeta;
+    }
+
+    // Pinta la grilla masonry de resultados de la busqueda POR DORSAL
+    // (formBuscar, arriba de la pagina) a partir del array que devolvio la
+    // API. Guarda `fotos` en `fotosActuales` porque el lightbox necesita
+    // ese mismo array para poder navegar "anterior"/"siguiente".
+    function renderizarResultados(fotos) {
+      fotosActuales = fotos;
+      // Se limpia el contenido previo antes de repintar: una busqueda
+      // nueva reemplaza completamente a la anterior (no se van acumulando
+      // resultados de busquedas distintas en la misma grilla).
+      gridResultados.innerHTML = '';
+
+      if (fotos.length === 0) {
+        mensajeBusqueda.textContent = 'No se encontraron fotos para ese dorsal en esta competencia.';
+        seccionResultados.classList.add('hidden');
+        return;
+      }
+
+      mensajeBusqueda.textContent = `${fotos.length} foto(s) encontrada(s).`;
+      seccionResultados.classList.remove('hidden');
+
+      fotos.forEach((foto, indice) => gridResultados.appendChild(crearTarjetaFoto(foto, indice)));
+
+      // Al terminar de crear las tarjetas, se sincroniza el texto/color de
+      // cada boton con el estado real del carrito (por si el usuario ya
+      // habia agregado alguna de estas fotos en una visita anterior).
+      actualizarEstadoBotones();
+    }
+
+    // Pinta la grilla masonry DENTRO del modal "ventana" de galeria
+    // completa de un evento (ver abrirGaleriaEvento()). Mismo mecanismo que
+    // renderizarResultados(), pero contenedor distinto.
+    function renderModalGaleriaEvento(fotos) {
+      fotosActuales = fotos;
+      modalGaleriaEventoGrid.innerHTML = '';
+      fotos.forEach((foto, indice) => modalGaleriaEventoGrid.appendChild(crearTarjetaFoto(foto, indice)));
+      actualizarEstadoBotones();
+    }
+
+    // Dispara la busqueda contra la API (eventoId + dorsal) y delega el
+    // pintado a renderizarResultados(). Muestra "Buscando..." de forma
+    // optimista mientras espera la respuesta para dar feedback inmediato.
+    async function buscarFotos(eventoId, dorsal) {
+      mensajeBusqueda.textContent = 'Buscando...';
+      try {
+        const respuesta = await fetch(
+          `${API_BASE}/fotos/buscar?eventoId=${encodeURIComponent(eventoId)}&dorsal=${encodeURIComponent(dorsal)}`
+        );
+        if (!respuesta.ok) throw new Error('Error al buscar fotos');
+        const fotos = await respuesta.json();
+        renderizarResultados(fotos);
+      } catch (error) {
+        console.error(error);
+        mensajeBusqueda.textContent = 'Ocurrio un error al buscar las fotos. Intenta de nuevo.';
+      }
+    }
+
+    formBuscar.addEventListener('submit', (evento) => {
+      evento.preventDefault(); // evita el submit nativo (recarga de pagina)
+      const eventoId = selectEvento.value;
+      const dorsal = inputDorsal.value.trim();
+
+      if (!eventoId || !dorsal) {
+        mensajeBusqueda.textContent = 'Elegi una competencia e ingresa un numero de dorsal.';
+        return;
+      }
+
+      buscarFotos(eventoId, dorsal);
+    });
+
+    // ---------- Lightbox ----------
+    // Repinta solo el boton "Agregar al carrito" DENTRO del lightbox
+    // (distinto de actualizarEstadoBotones(), que repinta los de la
+    // grilla). Se separa en su propia funcion porque el lightbox muestra
+    // una unica foto a la vez -- no hace falta recorrer un querySelectorAll.
+    function actualizarBotonLightbox() {
+      const foto = fotosActuales[indiceLightbox];
+      if (!foto) return;
+      const enCarrito = window.RideonCart && window.RideonCart.tiene(foto.id);
+      btnLightboxCarrito.textContent = enCarrito ? 'Agregada ✓' : 'Agregar al carrito';
+      btnLightboxCarrito.classList.toggle('bg-emerald-600', enCarrito);
+      btnLightboxCarrito.classList.toggle('text-white', enCarrito);
+      btnLightboxCarrito.classList.toggle('bg-brand-yellow', !enCarrito);
+      btnLightboxCarrito.classList.toggle('text-slate-900', !enCarrito);
+    }
+
+    // Punto unico donde se "pinta" la foto actual del lightbox: escribe el
+    // src/alt de la imagen grande y los textos de dorsal/precio a partir
+    // de `fotosActuales[indiceLightbox]`. La llaman tanto abrirLightbox()
+    // (primera apertura) como moverLightbox() (anterior/siguiente), asi
+    // que centraliza toda la logica de "que mostrar" en un solo lugar.
+    function mostrarFotoLightbox() {
+      const foto = fotosActuales[indiceLightbox];
+      if (!foto) return;
+      lightboxImagen.src = foto.previewUrl;
+      lightboxImagen.alt = `Foto dorsal ${foto.dorsal}`;
+      lightboxDorsal.textContent = foto.dorsal;
+      lightboxPrecio.textContent = formatearPrecio(Number(foto.precio || 0));
+      actualizarBotonLightbox();
+    }
+
+    // Abre el modal en la posicion `indice` de fotosActuales. Ademas de
+    // mostrar la foto, agrega `overflow-hidden` al <body> para bloquear el
+    // scroll de la pagina de fondo mientras el lightbox esta abierto (si
+    // no, en mobile se podria hacer scroll "a traves" del modal).
+    function abrirLightbox(indice) {
+      indiceLightbox = indice;
+      mostrarFotoLightbox();
+      lightbox.classList.remove('hidden');
+      lightbox.classList.add('flex'); // flex es el display que centra el contenido (ver clases del div en el HTML)
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function cerrarLightbox() {
+      lightbox.classList.add('hidden');
+      lightbox.classList.remove('flex');
+      document.body.classList.remove('overflow-hidden'); // restaura el scroll de la pagina
+      indiceLightbox = -1;
+    }
+
+    // Navega a la foto anterior/siguiente. El modulo (`% fotosActuales.length`)
+    // hace que la navegacion sea circular: en la ultima foto, "siguiente"
+    // vuelve a la primera, y en la primera, "anterior" salta a la ultima.
+    // Se suma `+ fotosActuales.length` antes del modulo para evitar que el
+    // resultado de `%` en JS de negativo cuando `delta` es -1 y
+    // `indiceLightbox` es 0 (JS no "envuelve" automaticamente numeros
+    // negativos como otros lenguajes).
+    function moverLightbox(delta) {
+      if (fotosActuales.length === 0) return;
+      indiceLightbox = (indiceLightbox + delta + fotosActuales.length) % fotosActuales.length;
+      mostrarFotoLightbox();
+    }
+
+    // ---------- Cableado de eventos del lightbox ----------
+    // Cerrar: boton "X" explicito, o clickear el fondo oscuro fuera de la
+    // foto. El chequeo `evento.target === lightbox` es clave: sin el,
+    // cualquier click DENTRO de la foto o los botones tambien burbujearia
+    // hasta este listener (esta puesto en el contenedor #lightbox) y
+    // cerraria el modal por accidente al hacer click en la imagen misma.
+    document.getElementById('btn-cerrar-lightbox').addEventListener('click', cerrarLightbox);
+    document.getElementById('btn-lightbox-anterior').addEventListener('click', () => moverLightbox(-1));
+    document.getElementById('btn-lightbox-siguiente').addEventListener('click', () => moverLightbox(1));
+    lightbox.addEventListener('click', (evento) => {
+      if (evento.target === lightbox) cerrarLightbox();
+    });
+    // Agregar/quitar del carrito directo desde el lightbox, usando la
+    // misma API RideonCart.alternar que usan los botones de la grilla.
+    btnLightboxCarrito.addEventListener('click', () => {
+      const foto = fotosActuales[indiceLightbox];
+      if (foto) window.RideonCart.alternar(foto);
+    });
+    // Navegacion por teclado: Escape cierra, flechas izquierda/derecha
+    // mueven anterior/siguiente. Si el lightbox esta abierto (encima de
+    // todo, incluida la ventana modal de galeria) Escape lo cierra a el
+    // primero -- recien si esta cerrado, Escape cierra la ventana modal de
+    // galeria si esa es la que esta abierta. Asi dos Escape seguidos hacen
+    // lo esperable: primero salis de la foto grande, despues de la galeria.
+    document.addEventListener('keydown', (evento) => {
+      if (!lightbox.classList.contains('hidden')) {
+        if (evento.key === 'Escape') cerrarLightbox();
+        if (evento.key === 'ArrowLeft') moverLightbox(-1);
+        if (evento.key === 'ArrowRight') moverLightbox(1);
+        return;
+      }
+      if (evento.key === 'Escape' && !modalGaleriaEvento.classList.contains('hidden')) {
+        cerrarModalGaleriaEvento();
+      }
+    });
+
+    // ---------- Inicializacion ----------
+    // Suscribirse al carrito recien puede hacerse una vez que RideonCart
+    // existe -- por eso se espera a 'layout:ready' (disparado por
+    // components/layout.js) en vez de suscribirse en la linea siguiente
+    // directamente: js/cart.js corre despues de este script inline en el
+    // orden de carga, asi que `window.RideonCart` todavia podria no
+    // existir si se llamara antes de tiempo.
+    document.addEventListener('layout:ready', () => {
+      if (window.RideonCart) window.RideonCart.suscribir(actualizarEstadoBotones);
+    });
+
+    // IIFE async: permite usar await a nivel de "modulo" sin envolver todo
+    // el script en una funcion nombrada aparte. Flujo:
+    //   1) Carga las competencias en el <select>.
+    //   2) Si la URL trae ?eventoId=...&dorsal=... (por ejemplo, alguien
+    //      llego desde el buscador del hero en index.html, que arma esa
+    //      misma URL), precompleta el formulario y dispara la busqueda
+    //      automaticamente -- asi el usuario no tiene que volver a tipear
+    //      los mismos datos en esta pagina.
+    (async function init() {
+      const eventos = await cargarEventos();
+      const parametros = new URLSearchParams(window.location.search);
+      const eventoIdUrl = parametros.get('eventoId');
+      const dorsalUrl = parametros.get('dorsal');
+
+      if (eventoIdUrl && dorsalUrl && eventos.some((evento) => String(evento.id) === eventoIdUrl)) {
+        selectEvento.value = eventoIdUrl;
+        inputDorsal.value = dorsalUrl;
+        buscarFotos(eventoIdUrl, dorsalUrl);
+      }
+    })();
+  </script>
+</body>
+</html>

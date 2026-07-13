@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RIDEONFOTO - Panel del Fotografo</title>
+  <link rel="stylesheet" href="css/tailwind.css">
+  <link rel="shortcut icon" href="/img logos/Logo_Negro.png" type="image/x-icon">
+</head>
+<body class="min-h-screen bg-slate-50 font-brand">
+
+  <!-- ============================== LOGIN ============================== -->
+  <div id="vista-login" class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white rounded-xl shadow-lg p-8">
+      <div class="flex justify-center mb-6">
+        <img src="/img logos/LOGO_Mixto.png" alt="RIDEON FOTO DEPORTIVA" class="w-40">
+      </div>
+      <h1 class="text-xl font-bold text-brand-red text-center mb-6">Panel del Fotografo</h1>
+
+      <form id="form-login" class="flex flex-col gap-3">
+        <input
+          type="email" id="login-email" required placeholder="Email" aria-label="Email"
+          class="border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
+        >
+        <input
+          type="password" id="login-password" required placeholder="Contraseña" aria-label="Contraseña"
+          class="border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
+        >
+        <p id="login-error" class="hidden text-red-600 text-sm"></p>
+        <button
+          type="submit" id="btn-login"
+          class="bg-brand-red text-white font-bold py-2 rounded-lg hover:bg-brand-red-dark transition disabled:opacity-60"
+        >
+          Ingresar
+        </button>
+      </form>
+
+      <a href="index.html" class="block text-center text-sm text-slate-500 mt-4 hover:underline">
+        Volver al sitio
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================ DASHBOARD ============================ -->
+  <!-- Layout de dos columnas desde md: (sidebar + panel de contenido). En
+       mobile la sidebar se apila arriba de todo (flex-col por defecto) y
+       sus pestañas de navegacion se vuelven una barra horizontal con
+       scroll (ver <nav> mas abajo) en vez de una columna vertical, para no
+       comerse media pantalla de alto en un celular. -->
+  <div id="vista-dashboard" class="hidden min-h-screen md:flex">
+
+    <!-- ---------- SIDEBAR ---------- -->
+    <aside class="flex shrink-0 flex-col bg-slate-900 text-white md:min-h-screen md:w-64">
+      <div class="flex items-center gap-3 border-b border-white/10 p-4">
+        <img src="/img logos/Logo_Blanco.png" alt="Logo" class="w-10">
+        <div class="min-w-0">
+          <p class="truncate text-sm font-bold leading-tight">Panel del Fotografo</p>
+          <p id="usuario-nombre" class="truncate text-xs text-white/60"></p>
+        </div>
+      </div>
+
+      <!-- Pestañas de modulo. Cada boton tiene `data-modulo-btn` con el
+           mismo valor que el `data-modulo` de la <section> que controla;
+           mostrarModulo() (ver script) es la unica fuente de verdad de que
+           clases le corresponden a cada boton segun si esta activo. -->
+      <nav class="flex flex-1 gap-1 overflow-x-auto p-2 md:flex-col md:overflow-visible">
+        <button type="button" data-modulo-btn="ordenes">📊 <span>Ordenes</span></button>
+        <button type="button" data-modulo-btn="eventos">🏁 <span>Eventos</span></button>
+        <button type="button" data-modulo-btn="fotos">📸 <span>Cargar fotos</span></button>
+        <button type="button" data-modulo-btn="home">⚙️ <span>Configurar Home</span></button>
+        <button type="button" data-modulo-btn="mensajes">💬 <span>Mensajes</span></button>
+        <button type="button" data-modulo-btn="config">🛠️ <span>Configuracion</span></button>
+      </nav>
+
+      <div class="flex flex-col gap-2 border-t border-white/10 p-3">
+        <a href="index.html" class="rounded-lg px-3 py-2 text-center text-sm text-white/70 transition hover:bg-white/10 hover:text-white">
+          Ver sitio
+        </a>
+        <button
+          id="btn-logout"
+          class="rounded-lg bg-brand-yellow px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-yellow-400"
+        >
+          Cerrar sesion
+        </button>
+      </div>
+    </aside>
+
+    <!-- ---------- PANEL DE CONTENIDO ---------- -->
+    <main class="flex-1 bg-slate-50 p-4 md:p-8">
+
+      <div id="mensaje-global" class="hidden mb-6 rounded-lg p-3 text-sm font-medium"></div>
+
+      <!-- MODULO: ORDENES -->
+      <section data-modulo="ordenes" class="modulo-dashboard space-y-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Ordenes</h1>
+          <p class="text-sm text-slate-500">Listado de ventas y su estado.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 class="text-lg font-bold text-brand-red">Ordenes recientes</h2>
+            <select id="filtro-ordenes-estado" aria-label="Filtrar ordenes por estado" class="border border-gray-300 p-2 rounded-lg text-sm">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobada">Aprobada</option>
+              <option value="rechazada">Rechazada</option>
+              <option value="expirada">Expirada</option>
+            </select>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead>
+                <tr class="border-b border-gray-200 text-gray-500">
+                  <th class="py-2 pr-3">Fecha</th>
+                  <th class="py-2 pr-3">Cliente</th>
+                  <th class="py-2 pr-3">Fotos</th>
+                  <th class="py-2 pr-3">Total</th>
+                  <th class="py-2 pr-3">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-ordenes">
+                <tr><td colspan="5" class="py-4 text-center text-gray-400">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULO: EVENTOS -->
+      <section data-modulo="eventos" class="modulo-dashboard hidden space-y-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Eventos</h1>
+          <p class="text-sm text-slate-500">Separá las galerias de fotos de competencias ya corridas de la publicidad de las que todavia estan por venir.</p>
+        </div>
+
+        <!-- ---------- BLOQUE 1: Galerias de fotos (eventos pasados) ----------
+             Esto es el modelo `Evento` real de la base de datos (mismo que
+             consume "Cargar fotos" y la busqueda publica): una competencia
+             que ya corrio y de la que se van a subir fotos. Ya no pide
+             Ubicacion -- no aporta nada para algo que ya paso y solo suma
+             friccion al formulario. -->
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-lg font-bold text-brand-red">Crear Nueva Galería de Fotos (Eventos Pasados)</h2>
+          <p class="mb-4 mt-1 text-xs text-slate-500">Nombre y fecha son obligatorios. Portada y logo son opcionales: se pueden cargar (o cambiar) despues desde la tabla de abajo.</p>
+          <form id="form-evento" class="grid grid-cols-1 gap-3 sm:grid-cols-2 items-end">
+            <div>
+              <label for="evento-nombre" class="block text-sm text-gray-700 mb-1">Nombre</label>
+              <input id="evento-nombre" type="text" required placeholder="Ej: Maraton Ciudad de Cordoba" class="w-full border border-gray-300 p-2 rounded-lg">
+            </div>
+            <div>
+              <label for="evento-fecha" class="block text-sm text-gray-700 mb-1">Fecha</label>
+              <input id="evento-fecha" type="date" required class="w-full border border-gray-300 p-2 rounded-lg">
+            </div>
+            <div>
+              <label for="evento-portada" class="block text-sm text-gray-700 mb-1">Imagen de portada (opcional)</label>
+              <input id="evento-portada" type="file" accept="image/png,image/jpeg,image/webp" class="w-full border border-gray-300 p-2 rounded-lg bg-white">
+              <p class="mt-1 text-xs text-slate-400">La foto grande de la tarjeta del evento en el sitio.</p>
+            </div>
+            <div>
+              <label for="evento-logo" class="block text-sm text-gray-700 mb-1">Logo de la competencia (opcional)</label>
+              <input id="evento-logo" type="file" accept="image/png,image/jpeg,image/webp" class="w-full border border-gray-300 p-2 rounded-lg bg-white">
+              <p class="mt-1 text-xs text-slate-400">Va como redondela sobre el borde inferior de la portada.</p>
+            </div>
+            <div class="sm:col-span-2">
+              <button
+                type="submit"
+                class="bg-brand-red text-white font-semibold px-5 py-2 rounded-lg hover:bg-brand-red-dark transition disabled:opacity-60"
+              >
+                Crear galería
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-lg font-bold text-brand-red mb-1">Galerías existentes</h2>
+          <p class="mb-4 text-xs text-slate-500">Los links "Portada"/"Logo" de cada tarjeta suben o reemplazan esa imagen al instante.</p>
+          <div id="grid-eventos-existentes" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <p class="col-span-full py-4 text-center text-gray-400">Cargando...</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- MODULO: CARGAR FOTOS -->
+      <section data-modulo="fotos" class="modulo-dashboard hidden space-y-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Cargar fotos</h1>
+          <p class="text-sm text-slate-500">Subida masiva de fotos asignadas a un dorsal, y busqueda/borrado puntual.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-lg font-bold text-brand-red mb-4">Subir fotos</h2>
+          <form id="form-fotos" class="flex flex-col gap-3">
+            <div>
+              <label for="fotos-evento" class="block text-sm text-gray-700 mb-1">Evento</label>
+              <select id="fotos-evento" required class="w-full border border-gray-300 p-2 rounded-lg">
+                <option value="">Selecciona un evento...</option>
+              </select>
+            </div>
+            <div>
+              <label for="fotos-dorsal" class="block text-sm text-gray-700 mb-1">Dorsal / Placa</label>
+              <input id="fotos-dorsal" type="text" required class="w-full border border-gray-300 p-2 rounded-lg">
+            </div>
+            <div>
+              <label for="fotos-archivos" class="block text-sm text-gray-700 mb-1">Fotos (podes seleccionar varias)</label>
+              <input
+                id="fotos-archivos" type="file" accept="image/png,image/jpeg,image/webp" multiple required
+                class="w-full border border-gray-300 p-2 rounded-lg bg-white"
+              >
+            </div>
+            <div id="fotos-progreso" class="hidden w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div id="fotos-progreso-barra" class="bg-brand-red h-2 rounded-full transition-all" style="width:0%"></div>
+            </div>
+            <button
+              type="submit" id="btn-subir-fotos"
+              class="self-start bg-brand-red text-white font-semibold px-5 py-2 rounded-lg hover:bg-brand-red-dark transition disabled:opacity-60"
+            >
+              Subir fotos
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <!-- VISTA 1: grilla de eventos (tarjetas, mismo patron visual que
+               "Eventos pasados" de galeria.html pero en tema claro). Tocar
+               una tarjeta entra a la VISTA 2 con todas las fotos de ese
+               evento -- ver abrirDetalleEventoFotos() en el script. -->
+          <div id="fotos-admin-vista-eventos">
+            <h2 class="text-lg font-bold text-brand-red mb-1">Buscar / eliminar fotos</h2>
+            <p class="mb-4 text-xs text-slate-500">Toca un evento para ver todas sus fotos cargadas.</p>
+            <input
+              id="filtro-eventos-fotos" type="text" placeholder="Buscar evento por nombre..."
+              class="mb-4 w-full border border-gray-300 p-2 rounded-lg text-sm sm:max-w-xs"
+            >
+            <div id="grid-eventos-fotos" class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+              <p class="col-span-full text-center text-gray-400 text-sm py-4">Cargando...</p>
+            </div>
+          </div>
+
+          <!-- VISTA 2: detalle de un evento (arranca oculta). Todas las
+               fotos del evento se traen una sola vez (GET
+               /api/fotos/evento/:eventoId) y el filtro de dorsal se aplica
+               en el cliente sobre ese array -- ver filtroFotosDorsal mas
+               abajo -- para no golpear la API en cada tecla. -->
+          <div id="fotos-admin-vista-detalle" class="hidden">
+            <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <button type="button" id="btn-volver-eventos-fotos" class="mb-1 flex items-center gap-1 text-xs font-semibold text-brand-red hover:underline">
+                  &larr; Volver a eventos
+                </button>
+                <h2 id="detalle-evento-nombre" class="text-lg font-bold text-slate-900">&mdash;</h2>
+              </div>
+              <div class="w-full sm:w-64">
+                <label for="filtro-fotos-dorsal" class="block text-sm text-gray-700 mb-1">Filtrar por dorsal / placa</label>
+                <input id="filtro-fotos-dorsal" type="text" placeholder="Ej: 123" class="w-full border border-gray-300 p-2 rounded-lg text-sm">
+              </div>
+            </div>
+            <div id="grid-fotos-admin" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULO: CONFIGURAR HOME -->
+      <section data-modulo="home" class="modulo-dashboard hidden space-y-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Configurar Home</h1>
+          <p class="text-sm text-slate-500">Gestiona las imagenes destacadas del carrusel de "Ultimas coberturas" del Home.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-lg font-bold text-brand-red">Agregar imagen destacada</h2>
+          <p class="mb-4 mt-1 text-xs text-slate-500">Subi un banner nuevo, o elegi directamente una foto ya cargada de un evento -- al tocarla en el Home, lleva a la galeria de ese evento.</p>
+
+          <div class="mb-4 inline-flex rounded-lg border border-gray-300 p-1 text-sm">
+            <button type="button" data-modo-home-imagen="archivo" class="rounded-md bg-brand-red px-3 py-1.5 font-semibold text-white">Subir imagen nueva</button>
+            <button type="button" data-modo-home-imagen="foto" class="rounded-md px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100">Elegir foto de un evento</button>
+          </div>
+
+          <form id="form-carrusel-home" class="grid grid-cols-1 gap-3 sm:grid-cols-3 items-end">
+            <div id="home-imagen-campo">
+              <label for="home-imagen" class="block text-sm text-gray-700 mb-1">Imagen</label>
+              <input
+                id="home-imagen" type="file" accept="image/png,image/jpeg,image/webp" required
+                class="w-full border border-gray-300 p-2 rounded-lg bg-white"
+              >
+            </div>
+            <div>
+              <label for="home-titulo" class="block text-sm text-gray-700 mb-1">Titulo de la cobertura</label>
+              <input id="home-titulo" type="text" required placeholder="Ej: Trail Run Andino" class="w-full border border-gray-300 p-2 rounded-lg">
+            </div>
+            <div>
+              <label for="home-url" class="block text-sm text-gray-700 mb-1">Destino o Evento Vinculado</label>
+              <select id="home-url" required class="w-full border border-gray-300 p-2 rounded-lg bg-white">
+                <option value="nosotros.html">Galeria General (nosotros.html)</option>
+              </select>
+            </div>
+
+            <!-- Solo visible en modo "foto": grilla de fotos del evento
+                 elegido arriba en "Destino", para tocar y elegir cual usar
+                 como banner (ver cargarFotosHomePicker/renderGridHomeFotosPicker). -->
+            <div id="home-fotos-picker" class="hidden sm:col-span-3">
+              <label class="block text-sm text-gray-700 mb-1">Elegi una o varias fotos de ese evento</label>
+              <div id="grid-home-fotos-picker" class="grid grid-cols-3 gap-2 sm:grid-cols-6"></div>
+              <p id="home-fotos-picker-mensaje" class="mt-1 text-xs text-slate-400"></p>
+            </div>
+
+            <div class="sm:col-span-3">
+              <button
+                type="submit"
+                class="bg-brand-red text-white font-semibold px-5 py-2 rounded-lg hover:bg-brand-red-dark transition disabled:opacity-60"
+              >
+                Agregar al carrusel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-lg font-bold text-brand-red mb-4">Imagenes destacadas actuales</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead>
+                <tr class="border-b border-gray-200 text-gray-500">
+                  <th class="py-2 pr-3">Miniatura</th>
+                  <th class="py-2 pr-3">Titulo</th>
+                  <th class="py-2 pr-3">Destino</th>
+                  <th class="py-2 pr-3">Destacar en carrusel</th>
+                  <th class="py-2 pr-3"></th>
+                </tr>
+              </thead>
+              <tbody id="tabla-carrusel-home">
+                <tr><td colspan="5" class="py-4 text-center text-gray-400">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULO: MENSAJES DE CONTACTO -->
+      <section data-modulo="mensajes" class="modulo-dashboard hidden space-y-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Mensajes</h1>
+          <p class="text-sm text-slate-500">Consultas recibidas desde el formulario de contacto del sitio.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <div class="mb-5 inline-flex rounded-lg border border-gray-300 p-1 text-sm">
+            <button type="button" data-filtro-mensajes="todos" data-label="Todos" class="rounded-md bg-brand-red px-3 py-1.5 font-semibold text-white">Todos</button>
+            <button type="button" data-filtro-mensajes="no-leido" data-label="No leidos" class="rounded-md px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100">No leidos</button>
+            <button type="button" data-filtro-mensajes="leido" data-label="Leidos" class="rounded-md px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100">Leidos</button>
+          </div>
+          <div id="lista-mensajes" class="flex flex-col gap-3">
+            <p class="text-center text-gray-400 text-sm">Cargando...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULO: CONFIGURACION DEL SITIO -->
+      <section data-modulo="config" class="modulo-dashboard hidden space-y-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Configuracion</h1>
+          <p class="text-sm text-slate-500">Parametros globales del sitio: precio por foto y marca de agua.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <form id="form-precio" class="flex flex-col gap-2">
+              <label for="config-precio" class="block text-sm text-gray-700">Precio por foto (ARS)</label>
+              <div class="flex gap-2">
+                <input
+                  id="config-precio" type="number" min="0" step="0.01"
+                  class="flex-1 border border-gray-300 p-2 rounded-lg"
+                >
+                <button
+                  type="submit"
+                  class="bg-brand-yellow text-slate-900 font-semibold px-4 py-2 rounded-lg hover:bg-yellow-400 transition disabled:opacity-60"
+                >
+                  Guardar
+                </button>
+              </div>
+            </form>
+
+            <form id="form-marca-agua" class="flex flex-col gap-2">
+              <label for="config-marca-agua" class="block text-sm text-gray-700">Imagen de marca de agua (PNG)</label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input
+                  id="config-marca-agua" type="file" accept="image/png"
+                  class="flex-1 border border-gray-300 p-2 rounded-lg bg-white"
+                >
+                <button
+                  type="submit"
+                  class="bg-brand-yellow text-slate-900 font-semibold px-4 py-2 rounded-lg hover:bg-yellow-400 transition disabled:opacity-60"
+                >
+                  Guardar
+                </button>
+              </div>
+              <img id="marca-agua-preview" class="hidden w-24 mt-1 border border-gray-300 rounded-lg" alt="Marca de agua actual">
+            </form>
+
+          </div>
+
+          <!-- Vista previa real: la marca de agua actualmente configurada
+               (imagen custom o el patron de texto de fallback) compuesta
+               sobre una foto de muestra, generada por el mismo pipeline que
+               procesa las fotos de verdad -- ver
+               GET /configuraciones/marca-agua/preview. Siempre visible (a
+               diferencia de #marca-agua-preview, que solo aparece si hay
+               una imagen custom cargada): asi el fotografo ve como queda
+               incluso cuando esta usando el patron de texto por defecto. -->
+          <div class="mt-6 border-t border-gray-100 pt-5">
+            <p class="mb-2 text-sm text-gray-700">Vista previa sobre una foto</p>
+            <div id="preview-marca-agua-contenedor" class="max-w-xs overflow-hidden rounded-lg border border-gray-200 bg-slate-100">
+              <p id="preview-marca-agua-cargando" class="p-4 text-center text-xs text-gray-400">Generando vista previa...</p>
+              <img id="preview-marca-agua" class="hidden w-full" alt="Foto de muestra con la marca de agua actual aplicada">
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ---------- MODAL: Detalle de orden ---------- -->
+    <!-- Overlay fijo a pantalla completa (fuera de <main>, hermano suyo
+         dentro de #vista-dashboard) para que tape tambien la sidebar sin
+         pelear con el layout de dos columnas. Arranca "hidden"; abrirModalOrden()
+         lo destapa con flex y lo puebla con la respuesta real de
+         GET /api/ordenes/:id (items + foto asociada), no con datos mockeados. -->
+    <div id="modal-orden" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4" aria-hidden="true">
+      <div class="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-100 px-6 py-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Orden</p>
+            <h3 id="modal-orden-titulo" class="text-lg font-bold text-slate-900">&mdash;</h3>
+          </div>
+          <button
+            type="button" id="modal-orden-cerrar" aria-label="Cerrar"
+            class="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grow overflow-y-auto px-6 py-4">
+          <div id="modal-orden-resumen" class="mb-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4"></div>
+
+          <h4 class="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Fotos compradas</h4>
+          <div id="modal-orden-fotos" class="grid grid-cols-2 gap-3 sm:grid-cols-3"></div>
+        </div>
+
+        <div class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-6 py-4">
+          <p id="modal-orden-reenviar-mensaje" class="hidden text-sm"></p>
+          <button
+            type="button" id="modal-orden-reenviar"
+            class="ml-auto flex items-center gap-2 rounded-lg border-2 border-brand-yellow bg-white px-4 py-2 text-sm font-semibold text-brand-red transition hover:bg-brand-yellow disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+              <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
+              <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
+            </svg>
+            Reenviar Fotos por Email
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    const TOKEN_KEY = 'rideon_token';
+    const USUARIO_KEY = 'rideon_usuario';
+
+    const vistaLogin = document.getElementById('vista-login');
+    const vistaDashboard = document.getElementById('vista-dashboard');
+    const formLogin = document.getElementById('form-login');
+    const loginError = document.getElementById('login-error');
+    const btnLogin = document.getElementById('btn-login');
+    const usuarioNombreEl = document.getElementById('usuario-nombre');
+    const btnLogout = document.getElementById('btn-logout');
+    const mensajeGlobal = document.getElementById('mensaje-global');
+
+    // ---------- Sesion ----------
+    function obtenerToken() {
+      return localStorage.getItem(TOKEN_KEY);
+    }
+
+    function guardarSesion(token, usuario) {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USUARIO_KEY, JSON.stringify(usuario));
+    }
+
+    function limpiarSesion() {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USUARIO_KEY);
+    }
+
+    function mostrarLogin() {
+      vistaDashboard.classList.add('hidden');
+      vistaLogin.classList.remove('hidden');
+    }
+
+    function mostrarDashboard() {
+      vistaLogin.classList.add('hidden');
+      vistaDashboard.classList.remove('hidden');
+
+      const usuarioGuardado = localStorage.getItem(USUARIO_KEY);
+      if (usuarioGuardado) {
+        const usuario = JSON.parse(usuarioGuardado);
+        usuarioNombreEl.textContent = `${usuario.nombre} (${usuario.rol})`;
+      }
+    }
+
+    function mostrarMensaje(texto, tipo = 'exito') {
+      mensajeGlobal.textContent = texto;
+      mensajeGlobal.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+      mensajeGlobal.classList.add(...(tipo === 'exito' ? ['bg-green-100', 'text-green-800'] : ['bg-red-100', 'text-red-800']));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => mensajeGlobal.classList.add('hidden'), 5000);
+    }
+
+    // Wrapper de fetch: agrega el token y redirige al login si expiro/es invalido.
+    async function apiFetch(path, options = {}) {
+      const token = obtenerToken();
+      const headers = { ...(options.headers || {}) };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const respuesta = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+      if (respuesta.status === 401) {
+        limpiarSesion();
+        mostrarLogin();
+        throw new Error('Tu sesion expiro. Volve a iniciar sesion.');
+      }
+
+      return respuesta;
+    }
+
+    // Escapa texto proveniente de formularios PUBLICOS (mensajes de contacto,
+    // datos de cliente en una orden) antes de interpolarlo en innerHTML. Sin
+    // esto, cualquier visitante podria mandar un mensaje con HTML/JS y
+    // ejecutarlo en la sesion autenticada del fotografo apenas abre el panel.
+    function escaparHtml(texto) {
+      const contenedor = document.createElement('div');
+      contenedor.textContent = texto === null || texto === undefined ? '' : String(texto);
+      return contenedor.innerHTML;
+    }
+
+    function formatearFecha(iso) {
+      return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function formatearPrecioAdmin(valor) {
+      return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(valor || 0));
+    }
+
+    // ---------- Navegacion por pestañas (sidebar) ----------
+    // Un unico punto (mostrarModulo) decide que <section data-modulo> se ve
+    // y que boton del sidebar queda pintado como activo. Igual que
+    // botonCarritoClases()/badgeEstadoOrden() mas abajo, se recalcula el
+    // className completo del boton en vez de solo togglear una clase --
+    // asi no hay que llevar la cuenta de que clases "base" vs "de estado"
+    // ya estaban puestas en el HTML.
+    const botonesModulo = document.querySelectorAll('[data-modulo-btn]');
+    const seccionesModulo = document.querySelectorAll('[data-modulo]');
+
+    function claseBotonModulo(activo) {
+      const base = 'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-semibold transition';
+      return activo
+        ? `${base} bg-brand-yellow text-slate-900`
+        : `${base} text-white/70 hover:bg-white/10 hover:text-white`;
+    }
+
+    function mostrarModulo(nombre) {
+      seccionesModulo.forEach((seccion) => {
+        seccion.classList.toggle('hidden', seccion.dataset.modulo !== nombre);
+      });
+      botonesModulo.forEach((boton) => {
+        boton.className = claseBotonModulo(boton.dataset.moduloBtn === nombre);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    botonesModulo.forEach((boton) => {
+      boton.addEventListener('click', () => mostrarModulo(boton.dataset.moduloBtn));
+    });
+
+    mostrarModulo('ordenes'); // pestaña inicial
+
+    // ---------- Login ----------
+    formLogin.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      loginError.classList.add('hidden');
+      btnLogin.disabled = true;
+      btnLogin.textContent = 'Ingresando...';
+
+      try {
+        const respuesta = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('login-email').value.trim(),
+            password: document.getElementById('login-password').value,
+          }),
+        });
+
+        if (!respuesta.ok) throw new Error('Credenciales invalidas.');
+
+        const { token, usuario } = await respuesta.json();
+        guardarSesion(token, usuario);
+        formLogin.reset();
+        mostrarDashboard();
+        inicializarDashboard();
+      } catch (error) {
+        loginError.textContent = error.message || 'No se pudo iniciar sesion.';
+        loginError.classList.remove('hidden');
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Ingresar';
+      }
+    });
+
+    btnLogout.addEventListener('click', () => {
+      limpiarSesion();
+      mostrarLogin();
+    });
+
+    // ---------- Ordenes recientes ----------
+    const tablaOrdenes = document.getElementById('tabla-ordenes');
+    const filtroOrdenesEstado = document.getElementById('filtro-ordenes-estado');
+
+    const ESTADO_ORDEN_CLASES = {
+      pendiente: 'bg-yellow-100 text-yellow-800',
+      aprobada: 'bg-green-100 text-green-800',
+      rechazada: 'bg-red-100 text-red-800',
+      expirada: 'bg-gray-200 text-gray-600',
+    };
+
+    function badgeEstadoOrden(estado) {
+      const clase = ESTADO_ORDEN_CLASES[estado] || 'bg-gray-200 text-gray-600';
+      return `<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${clase}">${escaparHtml(estado)}</span>`;
+    }
+
+    async function cargarOrdenes() {
+      try {
+        const estado = filtroOrdenesEstado.value;
+        const query = estado ? `?estado=${encodeURIComponent(estado)}` : '';
+        const respuesta = await apiFetch(`/ordenes${query}`);
+        if (!respuesta.ok) throw new Error('No se pudieron cargar las ordenes.');
+        const ordenes = await respuesta.json();
+
+        if (ordenes.length === 0) {
+          tablaOrdenes.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-400">Todavia no hay ordenes.</td></tr>`;
+          return;
+        }
+
+        tablaOrdenes.innerHTML = ordenes
+          .map(
+            (orden) => `
+          <tr class="cursor-pointer border-b border-gray-100 transition hover:bg-slate-50" data-orden-id="${orden.id}" title="Ver el detalle de esta orden">
+            <td class="py-2 pr-3">${formatearFecha(orden.createdAt)}</td>
+            <td class="py-2 pr-3">${escaparHtml(orden.clienteNombre || orden.clienteEmail)}</td>
+            <td class="py-2 pr-3">${(orden.items || []).length}</td>
+            <td class="py-2 pr-3">${formatearPrecioAdmin(orden.total)}</td>
+            <td class="py-2 pr-3">${badgeEstadoOrden(orden.estado)}</td>
+          </tr>`
+          )
+          .join('');
+
+        tablaOrdenes.querySelectorAll('[data-orden-id]').forEach((fila) => {
+          fila.addEventListener('click', () => abrirModalOrden(fila.dataset.ordenId));
+        });
+      } catch (error) {
+        console.error(error);
+        tablaOrdenes.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-red-500">Error al cargar ordenes.</td></tr>`;
+      }
+    }
+
+    filtroOrdenesEstado.addEventListener('change', cargarOrdenes);
+
+    // ---------- Modal: detalle de orden (miniaturas + reenvio de email) ----------
+    const modalOrden = document.getElementById('modal-orden');
+    const modalOrdenTitulo = document.getElementById('modal-orden-titulo');
+    const modalOrdenResumen = document.getElementById('modal-orden-resumen');
+    const modalOrdenFotos = document.getElementById('modal-orden-fotos');
+    const modalOrdenCerrar = document.getElementById('modal-orden-cerrar');
+    const btnReenviarEmail = document.getElementById('modal-orden-reenviar');
+    const reenviarMensaje = document.getElementById('modal-orden-reenviar-mensaje');
+
+    let ordenAbiertaId = null;
+
+    // El bucket privado guarda cada original como
+    // `eventos/{eventoId}/{dorsal}/{fotoId}-original.ext` (ver
+    // fotos.controller.js) -- no hay una columna "nombre de archivo"
+    // separada, asi que se deriva del ultimo segmento de esa key.
+    function nombreArchivoFoto(foto) {
+      const key = foto?.originalKey || foto?.previewKey || '';
+      return key.split('/').pop() || `foto-${foto?.id ?? '?'}`;
+    }
+
+    function resumenCampo(etiqueta, valorHtml) {
+      return `
+        <div>
+          <p class="text-xs uppercase tracking-wide text-slate-400">${etiqueta}</p>
+          <p class="font-medium text-slate-800">${valorHtml}</p>
+        </div>`;
+    }
+
+    function cerrarModalOrden() {
+      modalOrden.classList.add('hidden');
+      modalOrden.classList.remove('flex');
+      modalOrden.setAttribute('aria-hidden', 'true');
+      ordenAbiertaId = null;
+      reenviarMensaje.classList.add('hidden');
+    }
+
+    modalOrdenCerrar.addEventListener('click', cerrarModalOrden);
+    modalOrden.addEventListener('click', (evento) => {
+      if (evento.target === modalOrden) cerrarModalOrden();
+    });
+    document.addEventListener('keydown', (evento) => {
+      if (evento.key === 'Escape' && !modalOrden.classList.contains('hidden')) cerrarModalOrden();
+    });
+
+    async function abrirModalOrden(id) {
+      ordenAbiertaId = id;
+      modalOrden.classList.remove('hidden');
+      modalOrden.classList.add('flex');
+      modalOrden.setAttribute('aria-hidden', 'false');
+
+      modalOrdenTitulo.textContent = `#${id}`;
+      modalOrdenResumen.innerHTML = '';
+      modalOrdenFotos.innerHTML = `<p class="col-span-full text-center text-sm text-gray-400">Cargando fotos...</p>`;
+      reenviarMensaje.classList.add('hidden');
+      btnReenviarEmail.disabled = true;
+
+      try {
+        const respuesta = await apiFetch(`/ordenes/${id}`);
+        if (!respuesta.ok) throw new Error('No se pudo cargar el detalle de la orden.');
+        const orden = await respuesta.json();
+
+        // Si el usuario ya cerro el modal (o abrio otro) mientras esta
+        // respuesta viajaba, no pisar lo que se este mostrando ahora.
+        if (ordenAbiertaId !== id) return;
+
+        modalOrdenTitulo.textContent = `#${orden.id}`;
+        modalOrdenResumen.innerHTML = [
+          resumenCampo('Cliente', escaparHtml(orden.clienteNombre || '-')),
+          resumenCampo('Email', escaparHtml(orden.clienteEmail)),
+          resumenCampo('Total', formatearPrecioAdmin(orden.total)),
+          resumenCampo('Estado', badgeEstadoOrden(orden.estado)),
+        ].join('');
+
+        const items = orden.items || [];
+        modalOrdenFotos.innerHTML = items.length
+          ? items
+              .map((item) => {
+                const foto = item.foto || {};
+                return `
+              <div class="overflow-hidden rounded-lg border border-gray-200">
+                <img src="${foto.previewUrl || ''}" alt="Foto dorsal ${escaparHtml(foto.dorsal || '')}" class="aspect-square w-full object-cover">
+                <div class="p-2">
+                  <p class="truncate text-xs font-medium text-slate-700" title="${escaparHtml(nombreArchivoFoto(foto))}">${escaparHtml(nombreArchivoFoto(foto))}</p>
+                  <p class="text-xs text-slate-400">Dorsal ${escaparHtml(foto.dorsal || '-')} &middot; ${formatearPrecioAdmin(item.precioUnitario)}</p>
+                </div>
+              </div>`;
+              })
+              .join('')
+          : `<p class="col-span-full text-center text-sm text-gray-400">Esta orden no tiene fotos asociadas.</p>`;
+
+        // El reenvio solo tiene sentido (y el backend solo lo permite) para
+        // ordenes ya aprobadas -- para el resto se deja visible pero
+        // deshabilitado, asi el fotografo entiende por que sin adivinar.
+        btnReenviarEmail.disabled = orden.estado !== 'aprobada';
+        btnReenviarEmail.title = orden.estado === 'aprobada'
+          ? ''
+          : 'Solo se puede reenviar el email de ordenes aprobadas.';
+      } catch (error) {
+        console.error(error);
+        if (ordenAbiertaId === id) {
+          modalOrdenFotos.innerHTML = `<p class="col-span-full text-center text-sm text-red-500">${escaparHtml(error.message)}</p>`;
+        }
+      }
+    }
+
+    btnReenviarEmail.addEventListener('click', async () => {
+      if (!ordenAbiertaId) return;
+
+      const textoOriginal = btnReenviarEmail.innerHTML;
+      btnReenviarEmail.disabled = true;
+      btnReenviarEmail.textContent = 'Enviando...';
+      reenviarMensaje.classList.add('hidden');
+
+      try {
+        const respuesta = await apiFetch(`/ordenes/${ordenAbiertaId}/reenviar-email`, { method: 'POST' });
+        const data = await respuesta.json().catch(() => ({}));
+        if (!respuesta.ok) throw new Error(data.error || 'No se pudo reenviar el email.');
+
+        reenviarMensaje.textContent = 'Email reenviado correctamente.';
+        reenviarMensaje.classList.remove('hidden', 'text-red-600');
+        reenviarMensaje.classList.add('text-green-700');
+      } catch (error) {
+        reenviarMensaje.textContent = error.message;
+        reenviarMensaje.classList.remove('hidden', 'text-green-700');
+        reenviarMensaje.classList.add('text-red-600');
+      } finally {
+        btnReenviarEmail.innerHTML = textoOriginal;
+        btnReenviarEmail.disabled = false;
+      }
+    });
+
+    // ---------- Crear evento + lista de eventos ----------
+    const formEvento = document.getElementById('form-evento');
+    const selectFotosEvento = document.getElementById('fotos-evento');
+    const gridEventosExistentes = document.getElementById('grid-eventos-existentes');
+
+    // Cache del ultimo listado de eventos: se usa al alternar activo/inactivo
+    // para reenviar el objeto evento completo (ver alternarEvento) en vez de
+    // solo el campo que cambio, y tambien para pintar la grilla de tarjetas
+    // de "Buscar / eliminar fotos" (ver renderGridEventosFotos).
+    let eventosCache = [];
+
+    async function cargarEventos() {
+      try {
+        const respuesta = await apiFetch('/eventos');
+        if (!respuesta.ok) throw new Error('No se pudieron cargar los eventos.');
+        const eventos = await respuesta.json();
+        eventosCache = eventos;
+
+        const valorActual = selectFotosEvento.value;
+        selectFotosEvento.innerHTML = '<option value="">Selecciona un evento...</option>';
+        eventos.forEach((evento) => {
+          const option = document.createElement('option');
+          option.value = evento.id;
+          option.textContent = `${evento.nombre} - ${evento.fecha}`;
+          selectFotosEvento.appendChild(option);
+        });
+        selectFotosEvento.value = valorActual;
+
+        poblarSelectHomeDestino(eventos);
+        renderGaleriasExistentes(eventos);
+        renderGridEventosFotos(eventos);
+
+        // Si el evento cuyo detalle esta abierto en "Buscar / eliminar
+        // fotos" se elimino (desde esta misma pestaña Eventos), volver a
+        // la grilla en vez de dejar un detalle "huerfano" en pantalla.
+        if (eventoFotosActualId && !eventos.some((e) => String(e.id) === String(eventoFotosActualId))) {
+          volverAGrillaEventosFotos();
+        }
+      } catch (error) {
+        console.error(error);
+        gridEventosExistentes.innerHTML = `<p class="col-span-full py-4 text-center text-red-500">Error al cargar eventos.</p>`;
+      }
+    }
+
+    // Icono de camara para la portada de la tarjeta cuando el evento
+    // todavia no tiene una cargada (version mas grande que la de la grilla
+    // de "Cargar fotos": acá la miniatura era el motivo del reclamo de
+    // "se ven muy chicas", asi que esta vista usa portadas de h-40 en vez
+    // de h-28).
+    const ICONO_CAMARA_GALERIAS = `
+      <div class="flex h-40 w-full items-center justify-center bg-gradient-to-br from-brand-red/10 to-slate-100">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-10 w-10 text-brand-red/30"><rect x="3" y="7" width="18" height="13" rx="2"></rect><circle cx="12" cy="13.5" r="3.5"></circle><path d="M8 7l1.5-2.5h5L16 7"></path></svg>
+      </div>`;
+
+    function renderGaleriasExistentes(eventos) {
+      if (eventos.length === 0) {
+        gridEventosExistentes.innerHTML = `<p class="col-span-full py-4 text-center text-gray-400">Todavia no hay galerías.</p>`;
+        return;
+      }
+
+      gridEventosExistentes.innerHTML = eventos
+        .map((evento) => {
+          const portada = evento.portadaUrl
+            ? `<img src="${evento.portadaUrl}" alt="Portada ${escaparHtml(evento.nombre)}" class="h-40 w-full object-cover object-center">`
+            : ICONO_CAMARA_GALERIAS;
+
+          // Misma logica que renderGridEventosFotos()/galeria.html: la
+          // redondela de logo va FUERA del wrapper "overflow-hidden" de la
+          // portada, como sibling, para que el -mt- negativo la levante
+          // sobre el borde inferior sin que ese overflow-hidden se la
+          // recorte.
+          const logoBadge = evento.logoUrl
+            ? `<div class="relative z-10 flex justify-center">
+                 <img src="${evento.logoUrl}" alt="Logo ${escaparHtml(evento.nombre)}" class="-mt-6 h-12 w-12 rounded-full border-2 border-white bg-white object-cover shadow">
+               </div>`
+            : '';
+
+          return `
+        <div class="overflow-hidden rounded-xl border border-gray-200">
+          <div class="relative overflow-hidden">${portada}</div>
+          ${logoBadge}
+          <div class="p-4">
+            <div class="mb-1 flex items-start justify-between gap-2">
+              <p class="font-bold text-slate-900">${escaparHtml(evento.nombre)}</p>
+              <span class="inline-block shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${evento.activo ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}">
+                ${evento.activo ? 'Activo' : 'Inactivo'}
+              </span>
+            </div>
+            <p class="mb-3 text-xs text-slate-500">${evento.fecha}</p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-gray-100 pt-3 text-xs">
+              <label class="cursor-pointer font-semibold text-brand-red hover:underline">
+                Portada
+                <input type="file" accept="image/png,image/jpeg,image/webp" class="hidden" data-subir-imagen-evento="${evento.id}" data-tipo-imagen="portada">
+              </label>
+              <label class="cursor-pointer font-semibold text-brand-red hover:underline">
+                Logo
+                <input type="file" accept="image/png,image/jpeg,image/webp" class="hidden" data-subir-imagen-evento="${evento.id}" data-tipo-imagen="logo">
+              </label>
+              <button data-toggle-evento="${evento.id}" class="font-semibold text-brand-red hover:underline">
+                ${evento.activo ? 'Desactivar' : 'Activar'}
+              </button>
+              <button data-eliminar-evento="${evento.id}" class="font-semibold text-red-600 hover:underline">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>`;
+        })
+        .join('');
+
+      gridEventosExistentes.querySelectorAll('[data-toggle-evento]').forEach((boton) => {
+        boton.addEventListener('click', () => alternarEvento(boton.dataset.toggleEvento));
+      });
+      gridEventosExistentes.querySelectorAll('[data-eliminar-evento]').forEach((boton) => {
+        boton.addEventListener('click', () => eliminarEvento(boton.dataset.eliminarEvento));
+      });
+      gridEventosExistentes.querySelectorAll('[data-subir-imagen-evento]').forEach((input) => {
+        input.addEventListener('change', () => subirImagenEventoInline(input));
+      });
+    }
+
+    // Subida instantanea de portada/logo para un evento ya creado, disparada
+    // por el <input type="file"> oculto detras del link "Portada"/"Logo" de
+    // cada tarjeta (ver renderGaleriasExistentes). Usa los endpoints dedicados
+    // PUT /eventos/:id/portada y /:id/logo (no el PUT /:id generico, que
+    // sigue siendo JSON puro para el toggle activo de alternarEvento()).
+    async function subirImagenEventoInline(input) {
+      const archivo = input.files[0];
+      if (!archivo) return;
+
+      const id = input.dataset.subirImagenEvento;
+      const tipo = input.dataset.tipoImagen; // 'portada' | 'logo'
+      const formData = new FormData();
+      formData.append('imagen', archivo);
+
+      try {
+        const respuesta = await apiFetch(`/eventos/${id}/${tipo}`, { method: 'PUT', body: formData });
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || `No se pudo actualizar la ${tipo === 'portada' ? 'portada' : 'logo'}.`);
+        }
+
+        mostrarMensaje(`${tipo === 'portada' ? 'Portada' : 'Logo'} actualizado correctamente.`);
+        await cargarEventos();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      } finally {
+        input.value = '';
+      }
+    }
+
+    // Reenvia el evento completo (con solo `activo` invertido) en vez de un
+    // PUT parcial: el controller hace `evento.update({ nombre, fecha, ... })`
+    // leyendo esos campos del body, y si llegaran como `undefined` Sequelize
+    // podria pisarlos a NULL en vez de dejarlos como estaban.
+    async function alternarEvento(id) {
+      const evento = eventosCache.find((e) => String(e.id) === String(id));
+      if (!evento) return;
+
+      try {
+        const respuesta = await apiFetch(`/eventos/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...evento, activo: !evento.activo }),
+        });
+
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo actualizar el evento.');
+        }
+
+        mostrarMensaje('Galería actualizada correctamente.');
+        await cargarEventos();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      }
+    }
+
+    async function eliminarEvento(id) {
+      if (!confirm('Eliminar esta galería? Tambien se eliminan sus fotos.')) return;
+
+      try {
+        const respuesta = await apiFetch(`/eventos/${id}`, { method: 'DELETE' });
+
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo eliminar la galería.');
+        }
+
+        mostrarMensaje('Galería eliminada correctamente.');
+        await cargarEventos();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      }
+    }
+
+    formEvento.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      const boton = formEvento.querySelector('button[type="submit"]');
+      boton.disabled = true;
+
+      // multipart (no JSON): portada/logo son opcionales, y si se eligieron
+      // viajan como archivo en el mismo request de creacion (ver
+      // eventos.controller.js#crear, que las sube recien despues de crear
+      // la fila porque la key del bucket usa el id del evento).
+      const formData = new FormData();
+      formData.append('nombre', document.getElementById('evento-nombre').value.trim());
+      formData.append('fecha', document.getElementById('evento-fecha').value);
+      const portada = document.getElementById('evento-portada').files[0];
+      const logo = document.getElementById('evento-logo').files[0];
+      if (portada) formData.append('portada', portada);
+      if (logo) formData.append('logo', logo);
+
+      try {
+        const respuesta = await apiFetch('/eventos', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo crear la galería.');
+        }
+
+        mostrarMensaje('Galería creada correctamente.');
+        formEvento.reset();
+        await cargarEventos();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    // ---------- Subir fotos ----------
+    const formFotos = document.getElementById('form-fotos');
+    const btnSubirFotos = document.getElementById('btn-subir-fotos');
+    const progresoContenedor = document.getElementById('fotos-progreso');
+    const progresoBarra = document.getElementById('fotos-progreso-barra');
+
+    formFotos.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+
+      const eventoId = selectFotosEvento.value;
+      const dorsal = document.getElementById('fotos-dorsal').value.trim();
+      const archivos = document.getElementById('fotos-archivos').files;
+
+      if (!eventoId || !dorsal || archivos.length === 0) {
+        mostrarMensaje('Elegi un evento, un dorsal y al menos una foto.', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('eventoId', eventoId);
+      formData.append('dorsal', dorsal);
+      [...archivos].forEach((archivo) => formData.append('fotos', archivo));
+
+      btnSubirFotos.disabled = true;
+      btnSubirFotos.textContent = 'Subiendo...';
+      progresoContenedor.classList.remove('hidden');
+      progresoBarra.style.width = '30%';
+
+      try {
+        const respuesta = await apiFetch('/fotos/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        progresoBarra.style.width = '100%';
+
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudieron subir las fotos.');
+        }
+
+        const fotos = await respuesta.json();
+        mostrarMensaje(`${fotos.length} foto(s) subida(s) para el dorsal ${dorsal}.`);
+        formFotos.reset();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      } finally {
+        btnSubirFotos.disabled = false;
+        btnSubirFotos.textContent = 'Subir fotos';
+        setTimeout(() => {
+          progresoContenedor.classList.add('hidden');
+          progresoBarra.style.width = '0%';
+        }, 800);
+      }
+    });
+
+    // ---------- Buscar / eliminar fotos ----------
+    // Dos vistas dentro de la misma tarjeta: una grilla de eventos (tocar
+    // para entrar) y el detalle de un evento (todas sus fotos + filtro de
+    // dorsal en el cliente). `eventoFotosActualId` es null cuando estamos
+    // en la grilla; se usa tambien desde cargarEventos() para saber si hay
+    // que "salir" del detalle al recargar la lista de eventos.
+    const vistaEventosFotos = document.getElementById('fotos-admin-vista-eventos');
+    const vistaDetalleFotos = document.getElementById('fotos-admin-vista-detalle');
+    const gridEventosFotos = document.getElementById('grid-eventos-fotos');
+    const filtroEventosFotos = document.getElementById('filtro-eventos-fotos');
+    const btnVolverEventosFotos = document.getElementById('btn-volver-eventos-fotos');
+    const detalleEventoNombre = document.getElementById('detalle-evento-nombre');
+    const filtroFotosDorsal = document.getElementById('filtro-fotos-dorsal');
+    const gridFotosAdmin = document.getElementById('grid-fotos-admin');
+
+    let eventoFotosActualId = null;
+    // Todas las fotos del evento abierto, tal cual las devolvio la API.
+    // filtroFotosDorsal filtra sobre esta copia en memoria (sin volver a
+    // pedirle nada al servidor en cada tecla) y eliminarFoto() la mantiene
+    // sincronizada quitando la foto borrada.
+    let fotosEventoActualCache = [];
+
+    // Placeholder de icono de camara para eventos sin portada cargada (mismo
+    // patron que renderGaleriasPasadas() en galeria.html).
+    const ICONO_CAMARA_PLACEHOLDER = `
+      <div class="flex h-28 w-full items-center justify-center rounded-lg bg-gradient-to-br from-brand-red/10 to-slate-100">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-8 w-8 text-brand-red/30"><rect x="3" y="7" width="18" height="13" rx="2"></rect><circle cx="12" cy="13.5" r="3.5"></circle><path d="M8 7l1.5-2.5h5L16 7"></path></svg>
+      </div>`;
+
+    function renderGridEventosFotos(eventos) {
+      const filtro = filtroEventosFotos.value.trim().toLowerCase();
+      const eventosFiltrados = filtro
+        ? eventos.filter((evento) => evento.nombre.toLowerCase().includes(filtro))
+        : eventos;
+
+      if (eventosFiltrados.length === 0) {
+        gridEventosFotos.innerHTML = `<p class="col-span-full text-center text-gray-400 text-sm py-4">${
+          eventos.length === 0 ? 'Todavia no hay eventos. Crea uno en la pestaña "Eventos".' : 'Ningun evento coincide con la busqueda.'
+        }</p>`;
+        return;
+      }
+
+      gridEventosFotos.innerHTML = eventosFiltrados
+        .map((evento) => {
+          const portada = evento.portadaUrl
+            ? `<img src="${evento.portadaUrl}" alt="${escaparHtml(evento.nombre)}" class="h-28 w-full object-cover object-center">`
+            : ICONO_CAMARA_PLACEHOLDER;
+
+          // Misma logica que galeria.html: la redondela de logo va FUERA del
+          // wrapper "relative overflow-hidden" de la portada, como sibling,
+          // para que el -mt- negativo la levante sobre el borde inferior sin
+          // que ese overflow-hidden se la recorte.
+          const logoBadge = evento.logoUrl
+            ? `<div class="relative z-10 flex justify-center">
+                 <img src="${evento.logoUrl}" alt="Logo ${escaparHtml(evento.nombre)}" class="-mt-5 h-10 w-10 rounded-full border-2 border-white bg-white object-cover shadow">
+               </div>`
+            : '';
+
+          return `
+        <button type="button" data-evento-card="${evento.id}" class="flex flex-col overflow-hidden rounded-xl border border-gray-200 text-left transition hover:border-brand-red hover:shadow-md">
+          <div class="relative overflow-hidden">${portada}</div>
+          ${logoBadge}
+          <div class="p-3">
+            <p class="font-bold text-slate-900">${escaparHtml(evento.nombre)}</p>
+            <p class="text-xs text-slate-500">${evento.fecha}</p>
+          </div>
+        </button>`;
+        })
+        .join('');
+
+      gridEventosFotos.querySelectorAll('[data-evento-card]').forEach((tarjeta) => {
+        tarjeta.addEventListener('click', () => abrirDetalleEventoFotos(tarjeta.dataset.eventoCard));
+      });
+    }
+
+    filtroEventosFotos.addEventListener('input', () => renderGridEventosFotos(eventosCache));
+
+    function volverAGrillaEventosFotos() {
+      vistaDetalleFotos.classList.add('hidden');
+      vistaEventosFotos.classList.remove('hidden');
+      eventoFotosActualId = null;
+      fotosEventoActualCache = [];
+    }
+
+    btnVolverEventosFotos.addEventListener('click', volverAGrillaEventosFotos);
+
+    async function abrirDetalleEventoFotos(eventoId) {
+      const evento = eventosCache.find((e) => String(e.id) === String(eventoId));
+      eventoFotosActualId = eventoId;
+      detalleEventoNombre.textContent = evento ? `${evento.nombre} - ${evento.fecha}` : `Evento #${eventoId}`;
+      filtroFotosDorsal.value = '';
+      vistaEventosFotos.classList.add('hidden');
+      vistaDetalleFotos.classList.remove('hidden');
+      gridFotosAdmin.innerHTML = `<p class="col-span-full text-center text-gray-400 text-sm py-4">Cargando...</p>`;
+
+      try {
+        const respuesta = await apiFetch(`/fotos/evento/${eventoId}`);
+        if (!respuesta.ok) throw new Error('No se pudieron cargar las fotos de este evento.');
+        fotosEventoActualCache = await respuesta.json();
+        renderGridFotosAdmin(fotosEventoActualCache);
+      } catch (error) {
+        console.error(error);
+        gridFotosAdmin.innerHTML = `<p class="col-span-full text-center text-red-500 text-sm py-4">${escaparHtml(error.message)}</p>`;
+      }
+    }
+
+    function renderGridFotosAdmin(fotos) {
+      if (fotos.length === 0) {
+        gridFotosAdmin.innerHTML = `<p class="col-span-full text-center text-gray-400 text-sm py-4">${
+          fotosEventoActualCache.length === 0 ? 'Este evento todavia no tiene fotos cargadas.' : 'Ninguna foto coincide con ese dorsal.'
+        }</p>`;
+        return;
+      }
+
+      gridFotosAdmin.innerHTML = fotos
+        .map(
+          (foto) => `
+        <div class="group overflow-hidden rounded-lg border border-gray-200">
+          <div class="relative">
+            <img src="${foto.previewUrl}" alt="Dorsal ${escaparHtml(foto.dorsal)}" class="w-full aspect-square object-cover">
+            <button
+              data-eliminar-foto="${foto.id}"
+              aria-label="Eliminar foto"
+              class="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs text-white opacity-0 transition group-hover:opacity-100"
+            >&times;</button>
+          </div>
+          <p class="truncate bg-slate-50 px-2 py-1 text-center text-xs font-semibold text-slate-700">Dorsal ${escaparHtml(foto.dorsal || '—')}</p>
+        </div>`
+        )
+        .join('');
+
+      gridFotosAdmin.querySelectorAll('[data-eliminar-foto]').forEach((boton) => {
+        boton.addEventListener('click', () => eliminarFoto(boton.dataset.eliminarFoto));
+      });
+    }
+
+    // Filtra sobre `fotosEventoActualCache` (ya en memoria) en cada tecla,
+    // sin volver a pedirle nada al servidor -- ver comentario de esa
+    // variable mas arriba.
+    filtroFotosDorsal.addEventListener('input', () => {
+      const filtro = filtroFotosDorsal.value.trim().toLowerCase();
+      const filtradas = filtro
+        ? fotosEventoActualCache.filter((foto) => String(foto.dorsal).toLowerCase().includes(filtro))
+        : fotosEventoActualCache;
+      renderGridFotosAdmin(filtradas);
+    });
+
+    async function eliminarFoto(id) {
+      if (!confirm('Eliminar esta foto? Esta accion no se puede deshacer.')) return;
+
+      try {
+        const respuesta = await apiFetch(`/fotos/${id}`, { method: 'DELETE' });
+
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo eliminar la foto.');
+        }
+
+        mostrarMensaje('Foto eliminada correctamente.');
+        fotosEventoActualCache = fotosEventoActualCache.filter((foto) => String(foto.id) !== String(id));
+        const filtro = filtroFotosDorsal.value.trim().toLowerCase();
+        renderGridFotosAdmin(
+          filtro ? fotosEventoActualCache.filter((foto) => String(foto.dorsal).toLowerCase().includes(filtro)) : fotosEventoActualCache
+        );
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      }
+    }
+
+    // ---------- Configurar Home ----------
+    // Conectado a GET/POST/PUT/DELETE /api/carrusel-home (ImagenCarruselHome
+    // en el backend). `destacado` es el toggle "Destacar en Carrusel" de
+    // cada fila; index.html solo pide las que tienen destacado=true.
+    const formCarruselHome = document.getElementById('form-carrusel-home');
+    const inputHomeImagen = document.getElementById('home-imagen');
+    const inputHomeTitulo = document.getElementById('home-titulo');
+    const inputHomeUrl = document.getElementById('home-url');
+    const tablaCarruselHome = document.getElementById('tabla-carrusel-home');
+
+    // Modo del formulario "Agregar imagen destacada": 'archivo' (subir un
+    // banner nuevo, comportamiento original) o 'foto' (elegir una foto ya
+    // cargada a un evento -- la copia con crearDesdeFoto en vez de subir un
+    // archivo, ver más abajo).
+    let modoCarruselHomeImagen = 'archivo';
+    let fotosHomePickerCache = [];
+    let fotosHomeSeleccionadasIds = new Set();
+
+    const botonesModoHomeImagen = document.querySelectorAll('[data-modo-home-imagen]');
+    const campoHomeImagenArchivo = document.getElementById('home-imagen-campo');
+    const contenedorHomeFotosPicker = document.getElementById('home-fotos-picker');
+    const gridHomeFotosPicker = document.getElementById('grid-home-fotos-picker');
+    const mensajeHomeFotosPicker = document.getElementById('home-fotos-picker-mensaje');
+
+    function claseBotonModoHomeImagen(activo) {
+      return activo
+        ? 'rounded-md bg-brand-red px-3 py-1.5 font-semibold text-white'
+        : 'rounded-md px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100';
+    }
+
+    function actualizarModoHomeImagenUI() {
+      botonesModoHomeImagen.forEach((boton) => {
+        boton.className = claseBotonModoHomeImagen(boton.dataset.modoHomeImagen === modoCarruselHomeImagen);
+      });
+      const esArchivo = modoCarruselHomeImagen === 'archivo';
+      campoHomeImagenArchivo.classList.toggle('hidden', !esArchivo);
+      // `required` en un input oculto (display:none) no bloquea el submit
+      // -- el spec de HTML5 excluye de la validacion de constraints a los
+      // elementos no renderizados -- pero se lo saca igual para dejar la
+      // intencion explicita en vez de depender de ese detalle del spec.
+      inputHomeImagen.required = esArchivo;
+      contenedorHomeFotosPicker.classList.toggle('hidden', esArchivo);
+      if (esArchivo) {
+        fotosHomeSeleccionadasIds = new Set();
+      } else {
+        cargarFotosHomePicker();
+      }
+    }
+
+    botonesModoHomeImagen.forEach((boton) => {
+      boton.addEventListener('click', () => {
+        modoCarruselHomeImagen = boton.dataset.modoHomeImagen;
+        actualizarModoHomeImagenUI();
+      });
+    });
+
+    // En modo "foto", el select "Destino" deja de ser un destino cualquiera:
+    // pasa a ser el evento del que se eligen fotos, asi que cambiarlo
+    // recarga la grilla con las fotos de ese evento.
+    inputHomeUrl.addEventListener('change', () => {
+      if (modoCarruselHomeImagen === 'foto') cargarFotosHomePicker();
+    });
+
+    // Puebla el selector "Destino o Evento Vinculado" con la opcion fija de
+    // galeria general + un option por cada evento existente (mismo array
+    // `eventosCache` que ya carga la seccion Eventos), guardando en el
+    // `value` la ruta real (galeria.html?eventoId=N) para que el
+    // fotografo nunca tenga que escribir una URL/HTML a mano.
+    function poblarSelectHomeDestino(eventos) {
+      const valorActual = inputHomeUrl.value;
+      inputHomeUrl.innerHTML = '<option value="nosotros.html">Galeria General (nosotros.html)</option>';
+      eventos.forEach((evento) => {
+        const option = document.createElement('option');
+        option.value = `galeria.html?eventoId=${evento.id}`;
+        option.textContent = evento.nombre;
+        inputHomeUrl.appendChild(option);
+      });
+      if ([...inputHomeUrl.options].some((option) => option.value === valorActual)) {
+        inputHomeUrl.value = valorActual;
+      }
+    }
+
+    // Etiqueta legible del destino: la opcion fija de galeria general, o el
+    // nombre del evento si el `value` guardado (galeria.html?eventoId=N)
+    // matchea alguno de eventosCache; si no matchea (evento borrado
+    // despues), muestra la URL cruda como fallback.
+    function etiquetaDestinoHome(url) {
+      if (url === 'nosotros.html') return 'Galeria General (nosotros.html)';
+      const evento = eventosCache.find((e) => `galeria.html?eventoId=${e.id}` === url);
+      return evento ? evento.nombre : url;
+    }
+
+    function renderTablaCarruselHome(imagenes) {
+      if (imagenes.length === 0) {
+        tablaCarruselHome.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-400">No hay imagenes cargadas.</td></tr>`;
+        return;
+      }
+
+      tablaCarruselHome.innerHTML = imagenes
+        .map(
+          (item) => `
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3"><img src="${item.imagenUrl}" alt="${escaparHtml(item.titulo)}" class="h-12 w-16 rounded-lg object-cover"></td>
+          <td class="py-2 pr-3">${escaparHtml(item.titulo)}</td>
+          <td class="py-2 pr-3 text-slate-500">${escaparHtml(etiquetaDestinoHome(item.url))}</td>
+          <td class="py-2 pr-3">
+            <label class="relative inline-flex cursor-pointer items-center">
+              <input type="checkbox" class="peer sr-only" ${item.destacado ? 'checked' : ''} data-toggle-home="${item.id}">
+              <div class="h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-brand-yellow"></div>
+              <div class="absolute left-1 h-4 w-4 rounded-full bg-white shadow transition peer-checked:translate-x-5"></div>
+            </label>
+          </td>
+          <td class="py-2 pr-3 text-right whitespace-nowrap">
+            <button data-eliminar-home="${item.id}" class="text-xs font-semibold text-red-600 hover:underline">Eliminar del Home</button>
+          </td>
+        </tr>`
+        )
+        .join('');
+
+      tablaCarruselHome.querySelectorAll('[data-toggle-home]').forEach((input) => {
+        input.addEventListener('change', () => alternarDestacadoHome(input.dataset.toggleHome, input.checked));
+      });
+      tablaCarruselHome.querySelectorAll('[data-eliminar-home]').forEach((boton) => {
+        boton.addEventListener('click', () => eliminarImagenHome(boton.dataset.eliminarHome));
+      });
+    }
+
+    async function cargarCarruselHome() {
+      try {
+        const respuesta = await apiFetch('/carrusel-home');
+        if (!respuesta.ok) throw new Error('No se pudieron cargar las imagenes del Home.');
+        const imagenes = await respuesta.json();
+        renderTablaCarruselHome(imagenes);
+      } catch (error) {
+        console.error(error);
+        tablaCarruselHome.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-red-500">Error al cargar las imagenes.</td></tr>`;
+      }
+    }
+
+    // El switch reacciona al toque; si el PUT falla se recarga la tabla
+    // para que el estado visual vuelva a reflejar lo que realmente quedo
+    // guardado en el servidor, en vez de dejar el checkbox "mintiendo".
+    async function alternarDestacadoHome(id, destacado) {
+      try {
+        const respuesta = await apiFetch(`/carrusel-home/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ destacado }),
+        });
+        if (!respuesta.ok) throw new Error('No se pudo actualizar la imagen.');
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+        await cargarCarruselHome();
+      }
+    }
+
+    async function eliminarImagenHome(id) {
+      if (!confirm('Eliminar esta imagen del Home? Esta accion no se puede deshacer.')) return;
+
+      try {
+        const respuesta = await apiFetch(`/carrusel-home/${id}`, { method: 'DELETE' });
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo eliminar la imagen.');
+        }
+
+        mostrarMensaje('Imagen quitada del Home correctamente.');
+        await cargarCarruselHome();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      }
+    }
+
+    // Trae las fotos del evento seleccionado en "Destino" (parseando su
+    // eventoId de la URL guardada como value, ver poblarSelectHomeDestino)
+    // para elegir cual usar como banner -- mismo endpoint GET
+    // /api/fotos/evento/:eventoId que usa "Buscar / eliminar fotos".
+    async function cargarFotosHomePicker() {
+      fotosHomeSeleccionadasIds = new Set();
+      const match = inputHomeUrl.value.match(/eventoId=(\d+)/);
+      if (!match) {
+        fotosHomePickerCache = [];
+        gridHomeFotosPicker.innerHTML = '';
+        mensajeHomeFotosPicker.textContent = 'Elegi un evento en "Destino" para ver sus fotos.';
+        return;
+      }
+
+      gridHomeFotosPicker.innerHTML = '';
+      mensajeHomeFotosPicker.textContent = 'Cargando fotos...';
+
+      try {
+        const respuesta = await apiFetch(`/fotos/evento/${match[1]}`);
+        if (!respuesta.ok) throw new Error('No se pudieron cargar las fotos de ese evento.');
+        fotosHomePickerCache = await respuesta.json();
+        renderGridHomeFotosPicker();
+      } catch (error) {
+        mensajeHomeFotosPicker.textContent = error.message;
+      }
+    }
+
+    function renderGridHomeFotosPicker() {
+      if (fotosHomePickerCache.length === 0) {
+        gridHomeFotosPicker.innerHTML = '';
+        mensajeHomeFotosPicker.textContent = 'Ese evento todavia no tiene fotos cargadas.';
+        return;
+      }
+
+      mensajeHomeFotosPicker.textContent = fotosHomeSeleccionadasIds.size > 0
+        ? `${fotosHomeSeleccionadasIds.size} foto(s) seleccionada(s).`
+        : 'Toca una o varias fotos para agregarlas al carrusel.';
+      gridHomeFotosPicker.innerHTML = fotosHomePickerCache
+        .map((foto) => {
+          const seleccionada = fotosHomeSeleccionadasIds.has(String(foto.id));
+          return `
+        <button
+          type="button" data-foto-home-picker="${foto.id}"
+          class="relative overflow-hidden rounded-lg border-2 ${seleccionada ? 'border-green-500' : 'border-transparent'}"
+        >
+          <img src="${foto.previewUrl}" alt="Dorsal ${escaparHtml(foto.dorsal)}" class="aspect-square w-full object-cover">
+          ${seleccionada ? `
+          <span class="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 shadow ring-2 ring-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white" class="h-4 w-4">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+            </svg>
+          </span>` : ''}
+        </button>`;
+        })
+        .join('');
+
+      gridHomeFotosPicker.querySelectorAll('[data-foto-home-picker]').forEach((boton) => {
+        boton.addEventListener('click', () => {
+          const id = boton.dataset.fotoHomePicker;
+          if (fotosHomeSeleccionadasIds.has(id)) {
+            fotosHomeSeleccionadasIds.delete(id);
+          } else {
+            fotosHomeSeleccionadasIds.add(id);
+          }
+          renderGridHomeFotosPicker();
+        });
+      });
+    }
+
+    async function agregarAlCarruselDesdeArchivo(boton) {
+      const archivo = inputHomeImagen.files[0];
+      if (!archivo) {
+        mostrarMensaje('Selecciona una imagen.', 'error');
+        return;
+      }
+
+      boton.disabled = true;
+      const formData = new FormData();
+      formData.append('imagen', archivo);
+      formData.append('titulo', inputHomeTitulo.value.trim());
+      formData.append('url', inputHomeUrl.value || 'nosotros.html');
+
+      try {
+        const respuesta = await apiFetch('/carrusel-home', { method: 'POST', body: formData });
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo agregar la imagen.');
+        }
+
+        mostrarMensaje('Imagen agregada al Home correctamente.');
+        formCarruselHome.reset();
+        inputHomeUrl.value = 'nosotros.html';
+        await cargarCarruselHome();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      } finally {
+        boton.disabled = false;
+      }
+    }
+
+    async function agregarAlCarruselDesdeFoto(boton) {
+      if (fotosHomeSeleccionadasIds.size === 0) {
+        mostrarMensaje('Elegi al menos una foto de la grilla.', 'error');
+        return;
+      }
+
+      const titulo = inputHomeTitulo.value.trim();
+      const url = inputHomeUrl.value;
+      const idsSeleccionados = Array.from(fotosHomeSeleccionadasIds);
+
+      boton.disabled = true;
+      try {
+        let fallidas = 0;
+        // Se agregan de a una (la API no tiene un endpoint bulk) pero en
+        // secuencia, no en paralelo, para no saturar el bucket de previews
+        // copiando varias imagenes al mismo tiempo.
+        for (const fotoId of idsSeleccionados) {
+          const respuesta = await apiFetch('/carrusel-home/desde-foto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fotoId, titulo, url }),
+          });
+          if (!respuesta.ok) fallidas += 1;
+        }
+
+        if (fallidas === 0) {
+          mostrarMensaje(
+            idsSeleccionados.length === 1
+              ? 'Imagen agregada al Home correctamente.'
+              : `${idsSeleccionados.length} imagenes agregadas al Home correctamente.`
+          );
+        } else {
+          mostrarMensaje(`${fallidas} de ${idsSeleccionados.length} fotos no se pudieron agregar.`, 'error');
+        }
+
+        formCarruselHome.reset();
+        inputHomeUrl.value = 'nosotros.html';
+        modoCarruselHomeImagen = 'archivo';
+        actualizarModoHomeImagenUI();
+        await cargarCarruselHome();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      } finally {
+        boton.disabled = false;
+      }
+    }
+
+    formCarruselHome.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      const boton = formCarruselHome.querySelector('button[type="submit"]');
+
+      if (modoCarruselHomeImagen === 'foto') {
+        await agregarAlCarruselDesdeFoto(boton);
+      } else {
+        await agregarAlCarruselDesdeArchivo(boton);
+      }
+    });
+
+    // ---------- Mensajes de contacto ----------
+    const listaMensajes = document.getElementById('lista-mensajes');
+    const botonesFiltroMensajes = document.querySelectorAll('[data-filtro-mensajes]');
+
+    // Cache del ultimo listado completo: el filtro Todos/No leidos/Leidos se
+    // aplica en el cliente sobre este array (mismo patron que el filtro de
+    // dorsal en "Cargar fotos"), sin volver a pedirle nada al servidor.
+    let mensajesCache = [];
+    let filtroMensajesActual = 'todos'; // 'todos' | 'no-leido' | 'leido'
+
+    function claseBotonFiltroMensajes(activo) {
+      return activo
+        ? 'rounded-md bg-brand-red px-3 py-1.5 font-semibold text-white transition'
+        : 'rounded-md px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-slate-100';
+    }
+
+    function mensajesFiltrados() {
+      if (filtroMensajesActual === 'no-leido') return mensajesCache.filter((m) => !m.leido);
+      if (filtroMensajesActual === 'leido') return mensajesCache.filter((m) => m.leido);
+      return mensajesCache;
+    }
+
+    // Recalcula el "(N)" de cada pestaña de filtro a partir de mensajesCache
+    // -- se llama cada vez que cambia el cache (carga inicial, eliminar,
+    // marcar leido), asi los contadores nunca quedan desactualizados.
+    function actualizarContadoresMensajes() {
+      const noLeidos = mensajesCache.filter((m) => !m.leido).length;
+      const leidos = mensajesCache.length - noLeidos;
+      const conteos = { todos: mensajesCache.length, 'no-leido': noLeidos, leido: leidos };
+      botonesFiltroMensajes.forEach((boton) => {
+        boton.textContent = `${boton.dataset.label} (${conteos[boton.dataset.filtroMensajes]})`;
+      });
+    }
+
+    botonesFiltroMensajes.forEach((boton) => {
+      boton.addEventListener('click', () => {
+        filtroMensajesActual = boton.dataset.filtroMensajes;
+        botonesFiltroMensajes.forEach((b) => {
+          b.className = claseBotonFiltroMensajes(b.dataset.filtroMensajes === filtroMensajesActual);
+        });
+        renderListaMensajes();
+      });
+    });
+
+    // Link "Responder por email": abre el cliente de correo del fotografo
+    // con un mailto: prearmado (asunto + saludo con el nombre) en vez de
+    // mandar el email desde el servidor -- es solo un atajo, no un sistema
+    // de mensajeria propio.
+    function mailtoRespuesta(mensaje) {
+      const asunto = encodeURIComponent('Re: tu consulta a RIDEON FOTO DEPORTIVA');
+      const cuerpo = encodeURIComponent(`Hola ${mensaje.nombre},\n\n`);
+      return `mailto:${encodeURIComponent(mensaje.email)}?subject=${asunto}&body=${cuerpo}`;
+    }
+
+    // Iniciales para el avatar circular (primera letra de hasta 2 palabras
+    // del nombre, ej. "Juan Perez" -> "JP", "david" -> "D").
+    function inicialesMensaje(nombre) {
+      const partes = (nombre || '?').trim().split(/\s+/).slice(0, 2);
+      return partes.map((p) => p[0]).join('').toUpperCase();
+    }
+
+    const ICONO_SOBRE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5 shrink-0"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>`;
+    const ICONO_TELEFONO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5 shrink-0"><path d="M6.6 10.5c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.6c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1L6.6 10.5z"></path></svg>`;
+    const ICONO_RESPONDER = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5"><path d="M9 17l-6-5 6-5"></path><path d="M3 12h11a7 7 0 017 7v1"></path></svg>`;
+    const ICONO_PAPELERA = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5"><path d="M4 7h16"></path><path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2"></path><path d="M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"></path></svg>`;
+    const ICONO_BUZON_VACIO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto h-10 w-10 text-gray-300"><path d="M3 8l4-5h10l4 5"></path><path d="M3 8v10a2 2 0 002 2h14a2 2 0 002-2V8"></path><path d="M3 8h5l1.5 3h5L16 8h5"></path></svg>`;
+
+    function renderListaMensajes() {
+      const mensajes = mensajesFiltrados();
+
+      if (mensajes.length === 0) {
+        listaMensajes.innerHTML = `
+          <div class="py-8 text-center">
+            ${ICONO_BUZON_VACIO}
+            <p class="mt-3 text-sm text-gray-400">${
+              mensajesCache.length === 0 ? 'Todavia no llegaron mensajes.' : 'Ningun mensaje coincide con este filtro.'
+            }</p>
+          </div>`;
+        return;
+      }
+
+      listaMensajes.innerHTML = mensajes
+        .map((mensaje) => {
+          const botonLeido = mensaje.leido
+            ? ''
+            : `<button data-marcar-leido="${mensaje.id}" class="inline-flex items-center gap-1 text-xs font-semibold text-brand-red hover:underline">Marcar leido</button>`;
+          const telefono = mensaje.telefono
+            ? `<span class="inline-flex items-center gap-1">${ICONO_TELEFONO}${escaparHtml(mensaje.telefono)}</span>`
+            : '';
+
+          return `
+        <div class="relative overflow-hidden rounded-xl border ${
+          mensaje.leido ? 'border-gray-200' : 'border-brand-yellow/70 bg-yellow-50/50'
+        } p-4 transition hover:shadow-sm">
+          ${mensaje.leido ? '' : '<span class="absolute inset-y-0 left-0 w-1 bg-brand-yellow"></span>'}
+          <div class="flex items-start gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-red text-sm font-bold text-white">
+              ${escaparHtml(inicialesMensaje(mensaje.nombre))}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="mb-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <p class="font-semibold text-slate-900">${escaparHtml(mensaje.nombre)}</p>
+                <p class="shrink-0 text-xs text-gray-400">${formatearFecha(mensaje.createdAt)}</p>
+              </div>
+              <div class="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+                <span class="inline-flex items-center gap-1">${ICONO_SOBRE}${escaparHtml(mensaje.email)}</span>
+                ${telefono}
+              </div>
+              <p class="mb-3 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-sm text-gray-700">${escaparHtml(mensaje.mensaje)}</p>
+              <div class="flex flex-wrap items-center gap-4 border-t border-gray-100 pt-2">
+                <a href="${mailtoRespuesta(mensaje)}" class="inline-flex items-center gap-1 text-xs font-semibold text-brand-red hover:underline">${ICONO_RESPONDER}Responder por email</a>
+                ${botonLeido}
+                <button data-eliminar-mensaje="${mensaje.id}" class="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline">${ICONO_PAPELERA}Eliminar</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+        })
+        .join('');
+
+      listaMensajes.querySelectorAll('[data-marcar-leido]').forEach((boton) => {
+        boton.addEventListener('click', () => marcarMensajeLeido(boton.dataset.marcarLeido));
+      });
+      listaMensajes.querySelectorAll('[data-eliminar-mensaje]').forEach((boton) => {
+        boton.addEventListener('click', () => eliminarMensaje(boton.dataset.eliminarMensaje));
+      });
+    }
+
+    async function cargarMensajes() {
+      try {
+        const respuesta = await apiFetch('/contacto');
+        if (!respuesta.ok) throw new Error('No se pudieron cargar los mensajes.');
+        mensajesCache = await respuesta.json();
+        actualizarContadoresMensajes();
+        renderListaMensajes();
+      } catch (error) {
+        console.error(error);
+        listaMensajes.innerHTML = `<p class="text-center text-red-500 text-sm">Error al cargar mensajes.</p>`;
+      }
+    }
+
+    async function marcarMensajeLeido(id) {
+      try {
+        const respuesta = await apiFetch(`/contacto/${id}/leido`, { method: 'PUT' });
+        if (!respuesta.ok) throw new Error('No se pudo marcar el mensaje como leido.');
+        await cargarMensajes();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      }
+    }
+
+    async function eliminarMensaje(id) {
+      if (!confirm('Eliminar este mensaje? Esta accion no se puede deshacer.')) return;
+
+      try {
+        const respuesta = await apiFetch(`/contacto/${id}`, { method: 'DELETE' });
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo eliminar el mensaje.');
+        }
+
+        mostrarMensaje('Mensaje eliminado correctamente.');
+        mensajesCache = mensajesCache.filter((m) => String(m.id) !== String(id));
+        actualizarContadoresMensajes();
+        renderListaMensajes();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      }
+    }
+
+    // ---------- Configuracion del sitio ----------
+    const formPrecio = document.getElementById('form-precio');
+    const inputPrecio = document.getElementById('config-precio');
+    const formMarcaAgua = document.getElementById('form-marca-agua');
+    const inputMarcaAgua = document.getElementById('config-marca-agua');
+    const marcaAguaPreview = document.getElementById('marca-agua-preview');
+    const previewMarcaAguaCargando = document.getElementById('preview-marca-agua-cargando');
+    const previewMarcaAgua = document.getElementById('preview-marca-agua');
+
+    // El endpoint devuelve la imagen ya renderizada (no JSON), y esta detras
+    // de auth -- un <img src="/api/..."> comun no manda el Bearer token, asi
+    // que se trae con apiFetch y se arma un blob: URL. Se guarda la URL
+    // anterior para revocarla antes de pedir una nueva (subir una marca de
+    // agua nueva llama esto de vuelta) y no ir acumulando blobs en memoria.
+    let previewMarcaAguaBlobUrlActual = null;
+
+    async function cargarPreviewMarcaDeAgua() {
+      previewMarcaAguaCargando.classList.remove('hidden');
+      previewMarcaAguaCargando.textContent = 'Generando vista previa...';
+      previewMarcaAgua.classList.add('hidden');
+
+      try {
+        const respuesta = await apiFetch('/configuraciones/marca-agua/preview');
+        if (!respuesta.ok) throw new Error('No se pudo generar la vista previa.');
+
+        const blob = await respuesta.blob();
+        if (previewMarcaAguaBlobUrlActual) URL.revokeObjectURL(previewMarcaAguaBlobUrlActual);
+        previewMarcaAguaBlobUrlActual = URL.createObjectURL(blob);
+
+        previewMarcaAgua.src = previewMarcaAguaBlobUrlActual;
+        previewMarcaAgua.classList.remove('hidden');
+        previewMarcaAguaCargando.classList.add('hidden');
+      } catch (error) {
+        console.error(error);
+        previewMarcaAguaCargando.textContent = 'No se pudo generar la vista previa.';
+      }
+    }
+
+    async function cargarConfiguraciones() {
+      try {
+        const respuesta = await apiFetch('/configuraciones');
+        if (!respuesta.ok) throw new Error('No se pudo cargar la configuracion.');
+        const configuraciones = await respuesta.json();
+
+        const precio = configuraciones.find((c) => c.clave === 'precio_foto_default');
+        if (precio) inputPrecio.value = precio.valor;
+
+        const marcaAgua = configuraciones.find((c) => c.clave === 'marca_agua_imagen_url');
+        if (marcaAgua && marcaAgua.valor) {
+          marcaAguaPreview.src = marcaAgua.valor;
+          marcaAguaPreview.classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      await cargarPreviewMarcaDeAgua();
+    }
+
+    formPrecio.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      const boton = formPrecio.querySelector('button[type="submit"]');
+      boton.disabled = true;
+
+      try {
+        const respuesta = await apiFetch('/configuraciones/precio_foto_default', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ valor: inputPrecio.value }),
+        });
+
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo actualizar el precio.');
+        }
+
+        mostrarMensaje('Precio actualizado correctamente.');
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    formMarcaAgua.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+
+      const archivo = inputMarcaAgua.files[0];
+      if (!archivo) {
+        mostrarMensaje('Selecciona una imagen PNG.', 'error');
+        return;
+      }
+
+      const boton = formMarcaAgua.querySelector('button[type="submit"]');
+      boton.disabled = true;
+
+      const formData = new FormData();
+      formData.append('imagen', archivo);
+
+      try {
+        const respuesta = await apiFetch('/configuraciones/marca-agua/imagen', {
+          method: 'PUT',
+          body: formData,
+        });
+
+        if (!respuesta.ok) {
+          const data = await respuesta.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudo actualizar la marca de agua.');
+        }
+
+        const configuracion = await respuesta.json();
+        marcaAguaPreview.src = configuracion.valor;
+        marcaAguaPreview.classList.remove('hidden');
+        mostrarMensaje('Marca de agua actualizada correctamente.');
+        formMarcaAgua.reset();
+        await cargarPreviewMarcaDeAgua();
+      } catch (error) {
+        mostrarMensaje(error.message, 'error');
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    // ---------- Inicializacion ----------
+    async function inicializarDashboard() {
+      await Promise.all([cargarEventos(), cargarConfiguraciones(), cargarOrdenes(), cargarMensajes(), cargarCarruselHome()]);
+    }
+
+    if (obtenerToken()) {
+      mostrarDashboard();
+      inicializarDashboard();
+    } else {
+      mostrarLogin();
+    }
+  </script>
+</body>
+</html>
