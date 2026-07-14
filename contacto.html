@@ -51,7 +51,7 @@
         <textarea id="input-mensaje" required rows="4" class="mb-4 w-full rounded-lg border border-white/10 bg-slate-800 p-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-yellow"></textarea>
 
         <label class="mb-1 block text-sm text-slate-300">Adjuntar archivo (max. 2MB)</label>
-        <input type="file" class="mb-4 w-full text-sm text-slate-400">
+        <input id="input-imagen" type="file" accept="image/jpeg,image/png,image/webp" class="mb-4 w-full text-sm text-slate-400">
 
         <p id="contacto-estado" class="mb-4 min-h-[1.25rem] text-center text-sm"></p>
 
@@ -82,10 +82,20 @@
       const nombre = document.getElementById('input-nombre').value.trim();
       const email = document.getElementById('input-email').value.trim();
       const mensaje = document.getElementById('input-mensaje').value.trim();
+      const archivoImagen = document.getElementById('input-imagen').files[0];
 
       // Validacion minima en el cliente (los 3 campos ya son `required` en
       // el HTML, esto es una segunda barrera antes de gastar un fetch).
       if (!nombre || !email || !mensaje) return;
+
+      // El label promete "max. 2MB": se valida en el cliente antes de
+      // gastar un fetch (el limite real del lado del servidor, en
+      // upload.middleware.js, es mas generoso -- esto es solo UX).
+      if (archivoImagen && archivoImagen.size > 2 * 1024 * 1024) {
+        contactoEstado.textContent = 'El archivo adjunto supera los 2MB permitidos.';
+        contactoEstado.className = 'mb-4 min-h-[1.25rem] text-center text-sm text-red-400';
+        return;
+      }
 
       // Estado "en vuelo": deshabilita el boton (evita doble envio) y
       // muestra un mensaje neutro mientras se espera la respuesta del
@@ -95,10 +105,18 @@
       contactoEstado.className = 'mb-4 min-h-[1.25rem] text-center text-sm text-slate-400';
 
       try {
+        // FormData (no JSON): el adjunto viaja como multipart/form-data.
+        // No se fija el header Content-Type a mano -- el navegador arma
+        // el boundary del multipart solo si se lo deja.
+        const datosFormulario = new FormData();
+        datosFormulario.append('nombre', nombre);
+        datosFormulario.append('email', email);
+        datosFormulario.append('mensaje', mensaje);
+        if (archivoImagen) datosFormulario.append('imagen', archivoImagen);
+
         const respuesta = await fetch('/api/contacto', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, email, mensaje }),
+          body: datosFormulario,
         });
 
         if (!respuesta.ok) throw new Error('Error al enviar el mensaje');

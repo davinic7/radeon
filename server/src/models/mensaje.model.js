@@ -29,6 +29,16 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: false,
       },
+      imagenUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      // Key del objeto en el bucket publico de previews (ver storage.service.js):
+      // se guarda para poder borrar el archivo del bucket cuando se elimina el mensaje.
+      imagenKey: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       tableName: 'mensajes',

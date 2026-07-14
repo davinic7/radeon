@@ -467,6 +467,48 @@
         </div>
       </div>
     </div>
+
+    <!-- ---------- MODAL: Detalle de mensaje de contacto ---------- -->
+    <!-- Mismo patron que #modal-orden (overlay fijo, arranca "hidden").
+         Las filas de "Mensajes" ya no muestran el cuerpo del mensaje ni
+         las acciones inline -- todo eso vive aca, poblado desde
+         mensajesCache (no hace falta un fetch nuevo, ya esta en memoria). -->
+    <div id="modal-mensaje" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4" aria-hidden="true">
+      <div class="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-100 px-6 py-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Mensaje de contacto</p>
+            <h3 id="modal-mensaje-nombre" class="text-lg font-bold text-slate-900">&mdash;</h3>
+          </div>
+          <button
+            type="button" id="modal-mensaje-cerrar" aria-label="Cerrar"
+            class="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grow overflow-y-auto px-6 py-4">
+          <div id="modal-mensaje-meta" class="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500"></div>
+          <p id="modal-mensaje-cuerpo" class="mb-4 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-sm text-gray-700"></p>
+
+          <div id="modal-mensaje-imagen-wrap" class="hidden">
+            <p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Archivo adjunto</p>
+            <a id="modal-mensaje-imagen-link" href="#" target="_blank" rel="noopener">
+              <img id="modal-mensaje-imagen" src="" alt="Adjunto del mensaje" class="max-h-56 w-auto rounded-lg border border-gray-200 object-contain transition hover:opacity-90">
+            </a>
+          </div>
+        </div>
+
+        <div class="flex shrink-0 flex-wrap items-center gap-4 border-t border-gray-100 px-6 py-4">
+          <a id="modal-mensaje-responder" href="#" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-red hover:underline"></a>
+          <button type="button" id="modal-mensaje-marcar-leido" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-red hover:underline">Marcar leido</button>
+          <button type="button" id="modal-mensaje-eliminar" class="ml-auto inline-flex items-center gap-1 text-sm font-semibold text-red-600 hover:underline"></button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1667,8 +1709,12 @@
     const ICONO_TELEFONO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5 shrink-0"><path d="M6.6 10.5c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.6c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1L6.6 10.5z"></path></svg>`;
     const ICONO_RESPONDER = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5"><path d="M9 17l-6-5 6-5"></path><path d="M3 12h11a7 7 0 017 7v1"></path></svg>`;
     const ICONO_PAPELERA = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5"><path d="M4 7h16"></path><path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2"></path><path d="M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"></path></svg>`;
+    const ICONO_ADJUNTO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5 shrink-0"><path d="M21 11.5l-8.5 8.5a4 4 0 01-5.66-5.66l9-9a2.5 2.5 0 013.54 3.54l-8.5 8.5a1 1 0 01-1.41-1.41l7.79-7.79"></path></svg>`;
     const ICONO_BUZON_VACIO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto h-10 w-10 text-gray-300"><path d="M3 8l4-5h10l4 5"></path><path d="M3 8v10a2 2 0 002 2h14a2 2 0 002-2V8"></path><path d="M3 8h5l1.5 3h5L16 8h5"></path></svg>`;
 
+    // Filas compactas: no muestran el cuerpo del mensaje ni acciones inline
+    // (eso alargaba mucho cada fila) -- toda esa info se ve en el modal,
+    // que se abre clickeando la fila entera.
     function renderListaMensajes() {
       const mensajes = mensajesFiltrados();
 
@@ -1685,48 +1731,32 @@
 
       listaMensajes.innerHTML = mensajes
         .map((mensaje) => {
-          const botonLeido = mensaje.leido
-            ? ''
-            : `<button data-marcar-leido="${mensaje.id}" class="inline-flex items-center gap-1 text-xs font-semibold text-brand-red hover:underline">Marcar leido</button>`;
-          const telefono = mensaje.telefono
-            ? `<span class="inline-flex items-center gap-1">${ICONO_TELEFONO}${escaparHtml(mensaje.telefono)}</span>`
+          const adjunto = mensaje.imagenUrl
+            ? `<span class="inline-flex items-center gap-1">${ICONO_ADJUNTO}Adjunto</span>`
             : '';
 
           return `
-        <div class="relative overflow-hidden rounded-xl border ${
-          mensaje.leido ? 'border-gray-200' : 'border-brand-yellow/70 bg-yellow-50/50'
-        } p-4 transition hover:shadow-sm">
-          ${mensaje.leido ? '' : '<span class="absolute inset-y-0 left-0 w-1 bg-brand-yellow"></span>'}
-          <div class="flex items-start gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-red text-sm font-bold text-white">
-              ${escaparHtml(inicialesMensaje(mensaje.nombre))}
+        <div data-abrir-mensaje="${mensaje.id}" class="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 p-3 transition hover:shadow-sm">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-red text-sm font-bold text-white">
+            ${escaparHtml(inicialesMensaje(mensaje.nombre))}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <p class="truncate font-semibold text-slate-900">${escaparHtml(mensaje.nombre)}</p>
+              <p class="shrink-0 text-xs text-gray-400">${formatearFecha(mensaje.createdAt)}</p>
             </div>
-            <div class="min-w-0 flex-1">
-              <div class="mb-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <p class="font-semibold text-slate-900">${escaparHtml(mensaje.nombre)}</p>
-                <p class="shrink-0 text-xs text-gray-400">${formatearFecha(mensaje.createdAt)}</p>
-              </div>
-              <div class="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-                <span class="inline-flex items-center gap-1">${ICONO_SOBRE}${escaparHtml(mensaje.email)}</span>
-                ${telefono}
-              </div>
-              <p class="mb-3 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-sm text-gray-700">${escaparHtml(mensaje.mensaje)}</p>
-              <div class="flex flex-wrap items-center gap-4 border-t border-gray-100 pt-2">
-                <a href="${mailtoRespuesta(mensaje)}" class="inline-flex items-center gap-1 text-xs font-semibold text-brand-red hover:underline">${ICONO_RESPONDER}Responder por email</a>
-                ${botonLeido}
-                <button data-eliminar-mensaje="${mensaje.id}" class="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline">${ICONO_PAPELERA}Eliminar</button>
-              </div>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+              <span class="inline-flex min-w-0 items-center gap-1 truncate">${ICONO_SOBRE}<span class="truncate">${escaparHtml(mensaje.email)}</span></span>
+              ${adjunto}
             </div>
           </div>
+          ${mensaje.leido ? '' : '<span class="h-2 w-2 shrink-0 rounded-full bg-brand-yellow" aria-hidden="true"></span>'}
         </div>`;
         })
         .join('');
 
-      listaMensajes.querySelectorAll('[data-marcar-leido]').forEach((boton) => {
-        boton.addEventListener('click', () => marcarMensajeLeido(boton.dataset.marcarLeido));
-      });
-      listaMensajes.querySelectorAll('[data-eliminar-mensaje]').forEach((boton) => {
-        boton.addEventListener('click', () => eliminarMensaje(boton.dataset.eliminarMensaje));
+      listaMensajes.querySelectorAll('[data-abrir-mensaje]').forEach((fila) => {
+        fila.addEventListener('click', () => abrirModalMensaje(fila.dataset.abrirMensaje));
       });
     }
 
@@ -1743,18 +1773,24 @@
       }
     }
 
+    // Devuelven true/false (no solo lanzan/loggean el error): los botones
+    // del modal de mensaje usan ese valor para decidir si corresponde
+    // cerrarlo (si el usuario cancela el confirm() de eliminar, por
+    // ejemplo, el modal debe quedarse abierto).
     async function marcarMensajeLeido(id) {
       try {
         const respuesta = await apiFetch(`/contacto/${id}/leido`, { method: 'PUT' });
         if (!respuesta.ok) throw new Error('No se pudo marcar el mensaje como leido.');
         await cargarMensajes();
+        return true;
       } catch (error) {
         mostrarMensaje(error.message, 'error');
+        return false;
       }
     }
 
     async function eliminarMensaje(id) {
-      if (!confirm('Eliminar este mensaje? Esta accion no se puede deshacer.')) return;
+      if (!confirm('Eliminar este mensaje? Esta accion no se puede deshacer.')) return false;
 
       try {
         const respuesta = await apiFetch(`/contacto/${id}`, { method: 'DELETE' });
@@ -1767,10 +1803,95 @@
         mensajesCache = mensajesCache.filter((m) => String(m.id) !== String(id));
         actualizarContadoresMensajes();
         renderListaMensajes();
+        return true;
       } catch (error) {
         mostrarMensaje(error.message, 'error');
+        return false;
       }
     }
+
+    // ---------- Modal: detalle de mensaje de contacto ----------
+    const modalMensaje = document.getElementById('modal-mensaje');
+    const modalMensajeNombre = document.getElementById('modal-mensaje-nombre');
+    const modalMensajeMeta = document.getElementById('modal-mensaje-meta');
+    const modalMensajeCuerpo = document.getElementById('modal-mensaje-cuerpo');
+    const modalMensajeImagenWrap = document.getElementById('modal-mensaje-imagen-wrap');
+    const modalMensajeImagenLink = document.getElementById('modal-mensaje-imagen-link');
+    const modalMensajeImagen = document.getElementById('modal-mensaje-imagen');
+    const modalMensajeCerrar = document.getElementById('modal-mensaje-cerrar');
+    const modalMensajeResponder = document.getElementById('modal-mensaje-responder');
+    const modalMensajeMarcarLeido = document.getElementById('modal-mensaje-marcar-leido');
+    const modalMensajeEliminar = document.getElementById('modal-mensaje-eliminar');
+
+    // Texto estatico, no cambia entre mensajes -- solo el href de
+    // modalMensajeResponder se actualiza por mensaje, en abrirModalMensaje().
+    modalMensajeResponder.innerHTML = `${ICONO_RESPONDER}Responder por email`;
+    modalMensajeEliminar.innerHTML = `${ICONO_PAPELERA}Eliminar`;
+
+    let mensajeAbiertoId = null;
+
+    function cerrarModalMensaje() {
+      modalMensaje.classList.add('hidden');
+      modalMensaje.classList.remove('flex');
+      modalMensaje.setAttribute('aria-hidden', 'true');
+      mensajeAbiertoId = null;
+    }
+
+    modalMensajeCerrar.addEventListener('click', cerrarModalMensaje);
+    modalMensaje.addEventListener('click', (evento) => {
+      if (evento.target === modalMensaje) cerrarModalMensaje();
+    });
+    document.addEventListener('keydown', (evento) => {
+      if (evento.key === 'Escape' && !modalMensaje.classList.contains('hidden')) cerrarModalMensaje();
+    });
+
+    // Se puebla desde mensajesCache (ya esta en memoria de cargarMensajes()),
+    // no hace falta un fetch nuevo por mensaje.
+    function abrirModalMensaje(id) {
+      const mensaje = mensajesCache.find((m) => String(m.id) === String(id));
+      if (!mensaje) return;
+
+      mensajeAbiertoId = id;
+      modalMensajeNombre.textContent = mensaje.nombre;
+      modalMensajeCuerpo.textContent = mensaje.mensaje;
+
+      const telefono = mensaje.telefono
+        ? `<span class="inline-flex items-center gap-1">${ICONO_TELEFONO}${escaparHtml(mensaje.telefono)}</span>`
+        : '';
+      modalMensajeMeta.innerHTML = `
+        <span class="inline-flex items-center gap-1">${ICONO_SOBRE}${escaparHtml(mensaje.email)}</span>
+        ${telefono}
+        <span>${formatearFecha(mensaje.createdAt)}</span>
+      `;
+
+      if (mensaje.imagenUrl) {
+        modalMensajeImagenWrap.classList.remove('hidden');
+        modalMensajeImagenLink.href = mensaje.imagenUrl;
+        modalMensajeImagen.src = mensaje.imagenUrl;
+      } else {
+        modalMensajeImagenWrap.classList.add('hidden');
+        modalMensajeImagenLink.href = '#';
+        modalMensajeImagen.src = '';
+      }
+
+      modalMensajeResponder.href = mailtoRespuesta(mensaje);
+      modalMensajeMarcarLeido.classList.toggle('hidden', mensaje.leido);
+
+      modalMensaje.classList.remove('hidden');
+      modalMensaje.classList.add('flex');
+      modalMensaje.setAttribute('aria-hidden', 'false');
+    }
+
+    modalMensajeMarcarLeido.addEventListener('click', async () => {
+      if (!mensajeAbiertoId) return;
+      const ok = await marcarMensajeLeido(mensajeAbiertoId);
+      if (ok) cerrarModalMensaje();
+    });
+    modalMensajeEliminar.addEventListener('click', async () => {
+      if (!mensajeAbiertoId) return;
+      const ok = await eliminarMensaje(mensajeAbiertoId);
+      if (ok) cerrarModalMensaje();
+    });
 
     // ---------- Configuracion del sitio ----------
     const formPrecio = document.getElementById('form-precio');
